@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { accounts, profiles, users } from "@/lib/db/schema";
+import { accountsTable, profilesTable, usersTable } from "@/lib/db/schema";
 import { createServerFn } from "@tanstack/react-start";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
@@ -12,17 +12,17 @@ export const getProfileBySlug = createServerFn({ method: "GET" })
   .handler(async ({ data }) => {
     const response = await db
       .select({
-        userId: profiles.userId,
-        slug: profiles.slug,
-        description: profiles.description,
-        name: users.name,
-        image: users.image,
-        discordId: accounts.accountId
+        userId: profilesTable.userId,
+        slug: profilesTable.slug,
+        description: profilesTable.description,
+        name: usersTable.name,
+        image: usersTable.image,
+        discordId: accountsTable.accountId
       })
-      .from(profiles)
-      .innerJoin(users, eq(users.id, profiles.userId))
-      .innerJoin(accounts, eq(accounts.userId, users.id))
-      .where(eq(profiles.slug, data.slug))
+      .from(profilesTable)
+      .innerJoin(usersTable, eq(usersTable.id, profilesTable.userId))
+      .innerJoin(accountsTable, eq(accountsTable.userId, usersTable.id))
+      .where(eq(profilesTable.slug, data.slug))
       .limit(1);
     
     if (!response || response.length < 1) {

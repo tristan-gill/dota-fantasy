@@ -1,4 +1,4 @@
-import { Bracket } from '@/components/bracket';
+import { ResultsBracket } from '@/components/ResultsBracket';
 import { Card } from '@/components/ui/card';
 import { createFileRoute, ErrorComponent } from '@tanstack/react-router'
 import { useServerFn } from '@tanstack/react-start';
@@ -18,14 +18,6 @@ export const Route = createFileRoute('/profile/$slug')({
 
 function RouteComponent() {
   const profile = Route.useLoaderData();
-  const getPlayoffGamesFn = useServerFn(getPlayoffGames);
-  const getTeamsFn = useServerFn(getTeams);
-
-  const { data: playoffGamesData } = useQuery({ queryKey: ['playoffGames'], queryFn: getPlayoffGamesFn });
-  const { data: teamsData } = useQuery({ queryKey: ['teams'], queryFn: getTeamsFn });
-
-  console.log(playoffGamesData)
-  console.log(teamsData)
 
   return (
     <div>
@@ -36,12 +28,12 @@ function RouteComponent() {
         </TabsList>
         <TabsContent value="prediction">
           <Card className="p-6 max-w-[90vw] max-h-[70vh] overflow-scroll">
-            <Bracket />
+            
           </Card>
         </TabsContent>
         <TabsContent value="results">
           <Card className="p-6 max-w-[90vw] max-h-[70vh] overflow-scroll">
-            <Bracket />
+            <ResultsBracket />
           </Card>
         </TabsContent>
       </Tabs>

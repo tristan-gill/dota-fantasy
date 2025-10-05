@@ -4,13 +4,13 @@ import { eq } from "drizzle-orm";
 import { z } from "zod";
 
 import { db } from "@/lib/db";
-import { playoffGamePredictions, playoffGames, teams } from "@/lib/db/schema";
+import { playoffGamePredictionsTable, playoffGamesTable, teamsTable } from "@/lib/db/schema";
 
 export const getPlayoffGames = createServerFn({ method: "GET" })
   .handler(async () => {
     const playoffGamesResponse = await db
       .select()
-      .from(playoffGames);
+      .from(playoffGamesTable);
     
     if (!playoffGamesResponse || playoffGamesResponse.length < 1) {
       throw new Error('Playoff games not found.');
@@ -22,7 +22,7 @@ export const getTeams = createServerFn({ method: "GET" })
   .handler(async () => {
     const teamsResponse = await db
       .select()
-      .from(teams);
+      .from(teamsTable);
 
     if (!teamsResponse || teamsResponse.length < 1) {
       throw new Error('Teams not found.');
@@ -32,15 +32,16 @@ export const getTeams = createServerFn({ method: "GET" })
   });
 
 const GetPlayoffGamesPredictionsByProfileIdSchema = z.object({
-  profileId: z.uuid().nonempty()
+  profileId: z.string().nonempty()
 });
+// export type GetPlayoffGamesPredictionsByProfileId = z.infer<typeof GetPlayoffGamesPredictionsByProfileIdSchema>
 export const getPlayoffGamesPredictionsByProfileId = createServerFn({ method: "GET" })
   .inputValidator(GetPlayoffGamesPredictionsByProfileIdSchema)
   .handler(async ({ data: { profileId } }) => {
     const playoffGamePredictionsResponse = await db
       .select()
-      .from(playoffGamePredictions)
-      .where(eq(playoffGamePredictions.profileId, profileId));
+      .from(playoffGamePredictionsTable)
+      .where(eq(playoffGamePredictionsTable.profileId, profileId));
 
     return playoffGamePredictionsResponse;
   });

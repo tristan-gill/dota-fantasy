@@ -1,7 +1,6 @@
 import { ResultsBracket } from '@/components/ResultsBracket';
 import { Card } from '@/components/ui/card';
 import { createFileRoute, ErrorComponent } from '@tanstack/react-router'
-import { useServerFn } from '@tanstack/react-start';
 import { useQuery } from '@tanstack/react-query';
 import { getProfileBySlug } from '@/services/profiles';
 import { getPlayoffGames, getPredictionsByProfileId, getTeams } from '@/services/bracket';
@@ -10,7 +9,7 @@ import { PredictionBracket } from '@/components/PredictionBracket';
 import { Loader2 } from 'lucide-react';
 import { useAuthentication } from '@/lib/auth/client';
 
-export const Route = createFileRoute('/profile/$slug')({
+export const Route = createFileRoute('/predictions/$slug')({
   component: RouteComponent,
   loader: async ({ params }) => {
     const profile = await getProfileBySlug({ data: { slug: params.slug } });
@@ -44,7 +43,7 @@ function RouteComponent() {
     queryFn: () => getPredictionsByProfileId({ data: { profileId: profile.id } })
   });
 
-  const isOwner = userSession?.data?.user.id === profile.userId;
+  const isOwner = userSession?.user.id === profile.userId;
 
   return (
     <div>
@@ -54,7 +53,7 @@ function RouteComponent() {
           <TabsTrigger value="results">Results</TabsTrigger>
         </TabsList>
         <TabsContent value="prediction">
-          <Card className="p-6 max-w-[90vw] max-h-[70vh] overflow-scroll">
+          <Card className="p-6 max-w-[90vw] max-h-[calc(100vh - 150px)] overflow-scroll">
             {(!playoffGames || !teams || isPredictionsFetching) ? (
               <div className="h-[70vh] w-[90vw] flex flex-col items-center justify-center">
                 <Loader2 className="animate-spin size-20" />
@@ -65,7 +64,7 @@ function RouteComponent() {
           </Card>
         </TabsContent>
         <TabsContent value="results">
-          <Card className="p-6 max-w-[90vw] max-h-[70vh] overflow-scroll">
+          <Card className="p-6 max-w-[90vw] max-h-[calc(100vh - 150px)] overflow-scroll">
             {(!playoffGames || !teams) ? (
               <div className="h-[70vh] w-[90vw] flex flex-col items-center justify-center">
                 <Loader2 className="animate-spin size-20" />

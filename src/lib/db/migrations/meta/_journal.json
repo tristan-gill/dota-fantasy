@@ -15,6 +15,13 @@
       "when": 1759555886029,
       "tag": "0001_remarkable_mad_thinker",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1759720285993,
+      "tag": "0002_serious_joystick",
+      "breakpoints": true
     }
   ]
 }

@@ -32,3 +32,22 @@ export const getProfileBySlug = createServerFn({ method: "GET" })
 
     return response[0];
   });
+
+const GetProfileByUserIdSchema = z.object({
+  userId: z.string().nonempty()
+});
+export const getProfileByUserId = createServerFn({ method: "GET" })
+  .inputValidator(GetProfileByUserIdSchema)
+  .handler(async ({ data }) => {
+    const response = await db
+      .select()
+      .from(profilesTable)
+      .where(eq(profilesTable.userId, data.userId))
+      .limit(1);
+    
+    if (!response || response.length < 1) {
+      throw new Error('Profile not found.');
+    }
+
+    return response[0];
+  });

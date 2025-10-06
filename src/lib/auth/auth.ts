@@ -26,7 +26,7 @@ export const auth = betterAuth({
       prompt: "consent",
       mapProfileToUser: async (profile) => {
         return {
-          email: profile.id + '@fake-discord-email.com',
+          email: profile.id,
         }
       }
     },

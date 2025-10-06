@@ -7,11 +7,13 @@ export const authClient = createAuthClient({});
 
 export const useAuthentication = () => {
   // TODO what is suspenseQuery
-  const { data: userSession } = useSuspenseQuery(queryOptions({
-    queryKey: ["user"],
-    queryFn: () => getUserSession(),
-    staleTime: 5000,
-  }),)
+  // const { data: userSession } = useSuspenseQuery(queryOptions({
+  //   queryKey: ["user"],
+  //   queryFn: () => getUserSession(),
+  //   staleTime: 5000,
+  // }));
+
+  const { data: userSession } = authClient.useSession();
 
   return { userSession, isAuthenticated: !!userSession };
 };

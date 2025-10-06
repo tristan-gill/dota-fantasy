@@ -4,7 +4,8 @@ import { eq } from "drizzle-orm";
 import { z } from "zod";
 
 import { db } from "@/lib/db";
-import { playoffGamePredictionsTable, playoffGamesTable, teamsTable } from "@/lib/db/schema";
+import { InsertPrediction, predictionsTable, playoffGamesTable, profilesTable, teamsTable } from "@/lib/db/schema";
+import { userRequiredMiddleware } from "@/services/auth";
 
 export const getPlayoffGames = createServerFn({ method: "GET" })
   .handler(async () => {
@@ -31,17 +32,64 @@ export const getTeams = createServerFn({ method: "GET" })
     return teamsResponse;
   });
 
-const GetPlayoffGamesPredictionsByProfileIdSchema = z.object({
+const GetPredictionsByProfileIdSchema = z.object({
   profileId: z.string().nonempty()
 });
-// export type GetPlayoffGamesPredictionsByProfileId = z.infer<typeof GetPlayoffGamesPredictionsByProfileIdSchema>
-export const getPlayoffGamesPredictionsByProfileId = createServerFn({ method: "GET" })
-  .inputValidator(GetPlayoffGamesPredictionsByProfileIdSchema)
+export type GetPredictionsByProfileId = z.infer<typeof GetPredictionsByProfileIdSchema>
+export const getPredictionsByProfileId = createServerFn({ method: "GET" })
+  .inputValidator(GetPredictionsByProfileIdSchema)
   .handler(async ({ data: { profileId } }) => {
-    const playoffGamePredictionsResponse = await db
+    const predictionsResponse = await db
       .select()
-      .from(playoffGamePredictionsTable)
-      .where(eq(playoffGamePredictionsTable.profileId, profileId));
+      .from(predictionsTable)
+      .where(eq(predictionsTable.profileId, profileId));
 
-    return playoffGamePredictionsResponse;
+    return predictionsResponse;
+  });
+
+const SavePredictionSchema = z.object({
+  playoffGameId: z.string().nonempty(),
+  teamIdLeft: z.string().nonempty(),
+  teamIdRight: z.string().nonempty(),
+  winnerId: z.string().nonempty()
+});
+export type SavePrediction = z.infer<typeof SavePredictionSchema>
+
+const SavePredictionsSchema = z.object({
+  predictions: z.array(SavePredictionSchema)
+});
+export type SavePredictions = z.infer<typeof SavePredictionsSchema>;
+
+export const savePredictions = createServerFn({ method: "POST" })
+  .inputValidator(SavePredictionsSchema)
+  .middleware([userRequiredMiddleware])
+  .handler(async ({ data, context: { userSession } }) => {
+    const profilesResponse = await db
+      .select()
+      .from(profilesTable)
+      .where(eq(profilesTable.userId, userSession.user.id))
+      .limit(1);
+    if (!profilesResponse || profilesResponse.length < 1) {
+      throw new Error("Can't save predictions without being logged in.");
+    }
+
+    const profile = profilesResponse[0];
+    const predictions: InsertPrediction[] = data.predictions.map((p) => {
+      return {
+        playoffGameId: p.playoffGameId,
+        profileId: profile.id,
+        teamIdLeft: p.teamIdLeft,
+        teamIdRight: p.teamIdRight,
+        winnerId: p.winnerId
+      };
+    })
+    // delete old predictions
+    await db
+      .delete(predictionsTable)
+      .where(eq(predictionsTable.profileId, profile.id));
+
+    // save new predictions
+    await db
+      .insert(predictionsTable)
+      .values(predictions);
   });

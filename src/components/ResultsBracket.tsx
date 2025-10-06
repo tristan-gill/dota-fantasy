@@ -1,26 +1,25 @@
+import { db } from "@/lib/db"; // TODO commenting this out breaks types
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
-import { db } from "@/lib/db"; // TODO commenting this out breaks types
 import { PlayoffGame, Team } from "@/lib/db/schema";
 import { cn } from "@/lib/utils";
 
-import { getPlayoffGames, getTeams } from "@/services/bracket";
-import { useQuery } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
-
-export function ResultsBracket() {
-  const getPlayoffGamesFn = useServerFn(getPlayoffGames);
-  const getTeamsFn = useServerFn(getTeams);
-
-  const { data: playoffGames } = useQuery({ queryKey: ['playoffGames'], queryFn: getPlayoffGamesFn });
-  const { data: teams } = useQuery({ queryKey: ['teams'], queryFn: getTeamsFn });
-
+interface ResultsBracketProps {
+  playoffGames: PlayoffGame[];
+  teams: Team[];
+}
+export function ResultsBracket({ playoffGames, teams }: ResultsBracketProps) {
   const fillMatch = (round: number, sequence: number, isUpper: boolean) => {
     // TODO not efficient at all
-    const playoffGame = (playoffGames || []).find((pg) => pg.round === round && pg.sequence === sequence && pg.isUpper === isUpper);
-    const teamLeft = (teams || []).find((t) => t.id === playoffGame?.teamIdLeft);
-    const teamRight = (teams || []).find((t) => t.id === playoffGame?.teamIdRight);
+    const playoffGame = playoffGames.find((pg) => pg.round === round && pg.sequence === sequence && pg.isUpper === isUpper);
+    const teamLeft = teams.find((t) => t.id === playoffGame?.teamIdLeft);
+    const teamRight = teams.find((t) => t.id === playoffGame?.teamIdRight);
+
+    if (!playoffGame) {
+      console.log(`Missing match round:${round} sequence:${sequence} isUpper:${isUpper}`);
+      return null;
+    }
 
     return <BracketMatch playoffGame={playoffGame} teamLeft={teamLeft} teamRight={teamRight} />;
   }
@@ -62,6 +61,8 @@ export function ResultsBracket() {
             <EmptyMatch />
           </BracketColumn>
         </div>
+
+        <Separator />
 
         {/* lower */}
         <div className="flex flex-row gap-4">
@@ -111,9 +112,8 @@ export function ResultsBracket() {
       </div>
       {/* finals */}
       <BracketColumn>
-        <div className="mr-2">
-
-        {fillMatch(8, 1, false)}
+        <div className="mr-4 mb-[335px]">
+          {fillMatch(8, 1, false)}
         </div>
       </BracketColumn>
     </div>
@@ -129,15 +129,11 @@ function BracketColumn({ children }: { children: React.ReactNode }) {
 }
 
 interface BracketMatchProps {
-  playoffGame?: PlayoffGame;
+  playoffGame: PlayoffGame;
   teamLeft?: Team;
   teamRight?: Team;
 }
 function BracketMatch({ playoffGame, teamLeft, teamRight }: BracketMatchProps) {
-  if (!playoffGame || (!teamLeft && !teamRight)) {
-    return <Skeleton className="w-[144px] h-[68px] rounded-sm animate-none" />;
-  }
-
   return (
     <Card className="py-1 w-[144px] h-[68px] rounded-sm">      
       <CardContent className="px-1">

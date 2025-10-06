@@ -12,6 +12,7 @@ export const getProfileBySlug = createServerFn({ method: "GET" })
   .handler(async ({ data }) => {
     const response = await db
       .select({
+        id: profilesTable.id,
         userId: profilesTable.userId,
         slug: profilesTable.slug,
         description: profilesTable.description,

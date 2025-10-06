@@ -100,7 +100,7 @@ export const playoffGamesTable = pgTable("playoff_games", {
 // export interface PlayoffGameTabletidk = typeof playoffGames.$inferSelect;
 export type PlayoffGame = typeof playoffGamesTable.$inferSelect;
 
-export const playoffGamePredictionsTable = pgTable("playoff_game_predictions", {
+export const predictionsTable = pgTable("predictions", {
   id: uuid().primaryKey().defaultRandom(),
   playoffGameId: uuid("playoff_game_id").references(() => playoffGamesTable.id, { onDelete: "cascade" }),
   profileId: uuid("profile_id").references(() => profilesTable.id, { onDelete: "cascade" }),
@@ -111,4 +111,5 @@ export const playoffGamePredictionsTable = pgTable("playoff_game_predictions", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
   deletedAt: timestamp("deleted_at"),
 });
-// export type PlayoffGamePrediction = typeof playoffGamePredictions.$inferSelect;
+export type InsertPrediction = typeof predictionsTable.$inferInsert;
+export type Prediction = typeof predictionsTable.$inferSelect;

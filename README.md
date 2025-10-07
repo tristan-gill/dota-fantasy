@@ -1,5 +1,26 @@
 Welcome to your new TanStack app! 
 
+# TODO
+- fantasy page
+  - similar to TI fantasy but simplify the modifiers to a roll for 3 mods with pseudo-rarity
+  - select from any players you want
+- predictions home
+  - recent activity
+  - current top predictors
+- admin page
+  - need to add user roles table?
+  - ability to input completed games to fuel predictions and fantasy
+    - can we connect the dbtable teams to the stats teams?
+- team page
+  - show team logo and name
+  - show whos on the team
+  - show results
+- player page
+  - player name and logo
+  - what team they are on
+  - recent results
+
+
 # Getting Started
 
 To run this application:

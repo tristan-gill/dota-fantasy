@@ -37,6 +37,7 @@ function RouteComponent() {
   const { data: teams } = useQuery({ queryKey: ['teams'], queryFn: getTeams, staleTime: Infinity });
   const {
     data: predictions,
+    // TODO a poor way to force rerender
     isFetching: isPredictionsFetching
   } = useQuery({
     queryKey: ["predictions"],
@@ -46,14 +47,14 @@ function RouteComponent() {
   const isOwner = userSession?.user.id === profile.userId;
 
   return (
-    <div>
+    <div className="flex flex-col items-center">
       <Tabs defaultValue="prediction">
         <TabsList>
           <TabsTrigger value="prediction">Prediction</TabsTrigger>
           <TabsTrigger value="results">Results</TabsTrigger>
         </TabsList>
         <TabsContent value="prediction">
-          <Card className="p-6 max-w-[90vw] max-h-[calc(100vh - 150px)] overflow-scroll">
+          <Card className="p-6 max-w-[90vw] max-h-[calc(100vh-150px)] overflow-scroll">
             {(!playoffGames || !teams || isPredictionsFetching) ? (
               <div className="h-[70vh] w-[90vw] flex flex-col items-center justify-center">
                 <Loader2 className="animate-spin size-20" />
@@ -64,7 +65,7 @@ function RouteComponent() {
           </Card>
         </TabsContent>
         <TabsContent value="results">
-          <Card className="p-6 max-w-[90vw] max-h-[calc(100vh - 150px)] overflow-scroll">
+          <Card className="p-6 max-w-[90vw] max-h-[calc(100vh-150px)] overflow-scroll">
             {(!playoffGames || !teams) ? (
               <div className="h-[70vh] w-[90vw] flex flex-col items-center justify-center">
                 <Loader2 className="animate-spin size-20" />

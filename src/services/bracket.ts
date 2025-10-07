@@ -4,7 +4,7 @@ import { eq } from "drizzle-orm";
 import { z } from "zod";
 
 import { db } from "@/lib/db";
-import { InsertPrediction, predictionsTable, playoffGamesTable, profilesTable, teamsTable } from "@/lib/db/schema";
+import { InsertPrediction, predictionsTable, playoffGamesTable, profilesTable, teamsTable, configsTable } from "@/lib/db/schema";
 import { userRequiredMiddleware } from "@/services/auth";
 
 export const getPlayoffGames = createServerFn({ method: "GET" })
@@ -64,6 +64,20 @@ export const savePredictions = createServerFn({ method: "POST" })
   .inputValidator(SavePredictionsSchema)
   .middleware([userRequiredMiddleware])
   .handler(async ({ data, context: { userSession } }) => {
+    const configsResponse = await db
+      .select()
+      .from(configsTable)
+      .where(eq(configsTable.name, "isAcceptingPredictions"))
+      .limit(1);
+    if (!configsResponse || configsResponse.length < 1) {
+      throw new Error("Unable to find configs");
+    }
+
+    if (!configsResponse[0].enabled) {
+      // TODO how does this look on the client side
+      throw new Error("Predictions are closed!");
+    }
+    
     const profilesResponse = await db
       .select()
       .from(profilesTable)
@@ -92,4 +106,22 @@ export const savePredictions = createServerFn({ method: "POST" })
     await db
       .insert(predictionsTable)
       .values(predictions);
+  });
+
+export const GetPredictionActivity = createServerFn({ method: "GET"})
+  .handler(async () => {
+    const predictionActivityResponse = await db
+      .select({
+        userId: profilesTable.userId,
+        slug: profilesTable.slug,
+        teamName: teamsTable.name,
+        teamImage: teamsTable.image
+      })
+      .from(predictionsTable)
+      .innerJoin(playoffGamesTable, eq(playoffGamesTable.id, predictionsTable.playoffGameId))
+      .innerJoin(profilesTable, eq(predictionsTable.profileId, profilesTable.id))
+      .innerJoin(teamsTable, eq(teamsTable.id, predictionsTable.winnerId))
+      .where(eq(playoffGamesTable.round, 8)) // GRAND_FINALS_ROUND
+      .limit(25);
+    return predictionActivityResponse;
   });

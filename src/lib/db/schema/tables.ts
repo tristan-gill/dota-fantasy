@@ -1,4 +1,4 @@
-import { boolean, index, integer, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import { boolean, index, integer, numeric, pgEnum, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
 
 export const usersTable = pgTable("users", {
   id: text("id").primaryKey(),
@@ -50,14 +50,22 @@ export const verificationsTable = pgTable("verifications", {
   updatedAt: timestamp("updated_at")
 });
 
+export const userRoleEnum = pgEnum("user_role", [
+  "ADMIN",
+]);
+export const userRolesTable = pgTable("user_roles", {
+  id: uuid().primaryKey().defaultRandom(),
+  userId: text("user_id").references(() => usersTable.id, { onDelete: "cascade" }),
+  role: userRoleEnum().notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 export const profilesTable = pgTable("profiles", {
   id: uuid().primaryKey().defaultRandom(),
   userId: text("user_id").references(() => usersTable.id, { onDelete: "cascade" }),
   slug: text().unique().notNull(),
   description: text(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-  deletedAt: timestamp("deleted_at"),
 }, (table) => [
   index("slug_idx").on(table.slug)
 ]);
@@ -67,9 +75,7 @@ export const teamsTable = pgTable("teams", {
   id: uuid().primaryKey().defaultRandom(),
   name: text().notNull(),
   image: text(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-  deletedAt: timestamp("deleted_at"),
 });
 export type Team = typeof teamsTable.$inferSelect;
 
@@ -79,9 +85,7 @@ export const playersTable = pgTable("players", {
   steamId: text("steam_id").unique().notNull(),
   teamId: uuid("team_id").references(() => teamsTable.id, { onDelete: "cascade" }),
   position: integer().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-  deletedAt: timestamp("deleted_at"),
 });
 // export type Player = typeof players.$inferSelect;
 
@@ -93,9 +97,7 @@ export const playoffGamesTable = pgTable("playoff_games", {
   teamIdRight: uuid("team_id_right"),
   winnerId: uuid("winner_id"),
   isUpper: boolean("is_upper").default(false),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-  deletedAt: timestamp("deleted_at"),
 });
 // export interface PlayoffGameTabletidk = typeof playoffGames.$inferSelect;
 export type PlayoffGame = typeof playoffGamesTable.$inferSelect;
@@ -107,9 +109,50 @@ export const predictionsTable = pgTable("predictions", {
   teamIdLeft: uuid("team_id_left"),
   teamIdRight: uuid("team_id_right"),
   winnerId: uuid("winner_id"),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-  deletedAt: timestamp("deleted_at"),
 });
 export type InsertPrediction = typeof predictionsTable.$inferInsert;
 export type Prediction = typeof predictionsTable.$inferSelect;
+
+// TODO screaming snake case?
+export const configNameEnum = pgEnum("config_name", [
+  "isAcceptingPredictions",
+])
+export const configsTable = pgTable("configs", {
+  id: uuid().primaryKey().defaultRandom(),
+  name: configNameEnum().notNull(),
+  enabled: boolean(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const matchesTable = pgTable("matches", {
+  id: uuid().primaryKey().defaultRandom(),
+  steamId: text("steam_id").notNull(),
+  isPlayoff: boolean("is_playoff").default(false),
+});
+
+export const playerMatchPerformancesTable = pgTable("player_match_performance", {
+  id: uuid().primaryKey().defaultRandom(),
+  playerId: uuid("player_id").references(() => playersTable.id, { onDelete: "cascade" }),
+  matchId: uuid("match_id").references(() => matchesTable.id, { onDelete: "cascade" }),
+  kills: integer(),
+  deaths: integer(),
+  lastHits: integer("last_hits"),
+  gpm: integer(),
+  madstoneCount: integer("madstone_count"),
+  towerKills: integer("tower_kills"),
+  wardsPlaced: integer("wards_placed"),
+  campsStacked: integer("camps_stacked"),
+  runesGrabbed: integer("runes_grabbed"),
+  watchersTaken: integer("watchers_taken"),
+  lotusesGrabbed: integer("lotuses_grabbed"),
+  roshanKills: integer("roshan_kills"),
+  teamfightParticipation: numeric("teamfight_participation"),
+  stunTime: numeric("stun_time"),
+  tormentorKills: integer("tormentor_kills"),
+  courierKills: integer("courier_kills"),
+  firstbloodClaimed: boolean("firstblood_claimed"),
+  smokesUsed: integer("smokes_used"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+export type InsertPlayerMatchPerformance = typeof playerMatchPerformancesTable.$inferInsert;

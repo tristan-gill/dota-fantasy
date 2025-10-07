@@ -22,6 +22,41 @@
       "when": 1759720285993,
       "tag": "0002_serious_joystick",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1759774460921,
+      "tag": "0003_late_songbird",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1759807755414,
+      "tag": "0004_tough_black_cat",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1759808365289,
+      "tag": "0005_confused_jack_flag",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1759809264275,
+      "tag": "0006_tearful_blade",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1759810289078,
+      "tag": "0007_nasty_thena",
+      "breakpoints": true
     }
   ]
 }

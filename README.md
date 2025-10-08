@@ -8,7 +8,7 @@ Welcome to your new TanStack app!
   - recent activity
   - current top predictors
 - admin page
-  - need to add user roles table?
+  - ability to add result to bracket
   - ability to input completed games to fuel predictions and fantasy
     - can we connect the dbtable teams to the stats teams?
 - team page

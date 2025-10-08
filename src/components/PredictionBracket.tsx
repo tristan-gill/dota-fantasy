@@ -9,6 +9,7 @@ import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { SavePrediction, savePredictions } from "@/services/bracket";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { Check, X } from "lucide-react";
 
 type UpsertPrediction = Prediction | SavePrediction;
 
@@ -23,10 +24,11 @@ interface PredictionBracketProps {
   playoffGames: PlayoffGame[];
   predictions: Prediction[];
   teams: Team[];
-  isOwner: boolean
+  isOwner: boolean;
+  isLocked: boolean;
 }
-//TODO populate isowner
-export function PredictionBracket({ playoffGames, predictions, teams, isOwner }: PredictionBracketProps) {
+
+export function PredictionBracket({ playoffGames, predictions, teams, isOwner, isLocked }: PredictionBracketProps) {
   const queryClient = useQueryClient();
 
   const [initialPredictions, setInitialPredictions] = useState<Prediction[]>(predictions);
@@ -35,12 +37,11 @@ export function PredictionBracket({ playoffGames, predictions, teams, isOwner }:
     return [...initialPredictions, ...newPredictions];
   }, [initialPredictions, newPredictions]);
 
-  const showResetButton = isOwner && ((!!newPredictions && newPredictions.length > 0) || (initialPredictions.length === playoffGames.length));
-  const showSaveButton = isOwner && newPredictions.length === playoffGames.length;
+  const showResetButton = !isLocked && isOwner && ((!!newPredictions && newPredictions.length > 0) || (initialPredictions.length === playoffGames.length));
+  const showSaveButton = !isLocked && isOwner && newPredictions.length === playoffGames.length;
 
   const predictMatchWinner = (props: PredictMatchWinnerProps) => {
     const { playoffGame, teamIdLeft, teamIdRight, winnerId } = props;
-    console.log({playoffGame, teamIdLeft, teamIdRight, winnerId, newPredictions});
 
     const newPrediction: SavePrediction = {
       playoffGameId: playoffGame.id,
@@ -78,10 +79,10 @@ export function PredictionBracket({ playoffGames, predictions, teams, isOwner }:
             </BracketColumn>
 
             <BracketColumn>
-              <BracketMatch round={2} sequence={1} isUpper={true} playoffGames={playoffGames} teams={teams} predictions={allPredictions} onPredictWinner={predictMatchWinner} />
-              <BracketMatch round={2} sequence={2} isUpper={true} playoffGames={playoffGames} teams={teams} predictions={allPredictions} onPredictWinner={predictMatchWinner} />
-              <BracketMatch round={2} sequence={3} isUpper={true} playoffGames={playoffGames} teams={teams} predictions={allPredictions} onPredictWinner={predictMatchWinner} />
-              <BracketMatch round={2} sequence={4} isUpper={true} playoffGames={playoffGames} teams={teams} predictions={allPredictions} onPredictWinner={predictMatchWinner} />
+              <BracketMatch round={2} sequence={1} isUpper={true} playoffGames={playoffGames} teams={teams} predictions={allPredictions} onPredictWinner={predictMatchWinner} isLocked={isLocked} />
+              <BracketMatch round={2} sequence={2} isUpper={true} playoffGames={playoffGames} teams={teams} predictions={allPredictions} onPredictWinner={predictMatchWinner} isLocked={isLocked} />
+              <BracketMatch round={2} sequence={3} isUpper={true} playoffGames={playoffGames} teams={teams} predictions={allPredictions} onPredictWinner={predictMatchWinner} isLocked={isLocked} />
+              <BracketMatch round={2} sequence={4} isUpper={true} playoffGames={playoffGames} teams={teams} predictions={allPredictions} onPredictWinner={predictMatchWinner} isLocked={isLocked} />
             </BracketColumn>
 
             <BracketColumn>
@@ -89,8 +90,8 @@ export function PredictionBracket({ playoffGames, predictions, teams, isOwner }:
             </BracketColumn>
 
             <BracketColumn>
-              <BracketMatch round={4} sequence={1} isUpper={true} playoffGames={playoffGames} teams={teams} predictions={allPredictions} onPredictWinner={predictMatchWinner} />
-              <BracketMatch round={4} sequence={2} isUpper={true} playoffGames={playoffGames} teams={teams} predictions={allPredictions} onPredictWinner={predictMatchWinner} />
+              <BracketMatch round={4} sequence={1} isUpper={true} playoffGames={playoffGames} teams={teams} predictions={allPredictions} onPredictWinner={predictMatchWinner} isLocked={isLocked} />
+              <BracketMatch round={4} sequence={2} isUpper={true} playoffGames={playoffGames} teams={teams} predictions={allPredictions} onPredictWinner={predictMatchWinner} isLocked={isLocked} />
             </BracketColumn>
 
             <BracketColumn>
@@ -98,7 +99,7 @@ export function PredictionBracket({ playoffGames, predictions, teams, isOwner }:
             </BracketColumn>
 
             <BracketColumn>
-              <BracketMatch round={6} sequence={1} isUpper={true} playoffGames={playoffGames} teams={teams} predictions={allPredictions} onPredictWinner={predictMatchWinner} />
+              <BracketMatch round={6} sequence={1} isUpper={true} playoffGames={playoffGames} teams={teams} predictions={allPredictions} onPredictWinner={predictMatchWinner} isLocked={isLocked} />
             </BracketColumn>
 
             <BracketColumn>
@@ -111,53 +112,53 @@ export function PredictionBracket({ playoffGames, predictions, teams, isOwner }:
           {/* lower */}
           <div className="flex flex-row gap-4">
             <BracketColumn>
-              <BracketMatch round={1} sequence={1} isUpper={false} playoffGames={playoffGames} teams={teams} predictions={allPredictions} onPredictWinner={predictMatchWinner} />
-              <BracketMatch round={1} sequence={2} isUpper={false} playoffGames={playoffGames} teams={teams} predictions={allPredictions} onPredictWinner={predictMatchWinner} />
-              <BracketMatch round={1} sequence={3} isUpper={false} playoffGames={playoffGames} teams={teams} predictions={allPredictions} onPredictWinner={predictMatchWinner} />
-              <BracketMatch round={1} sequence={4} isUpper={false} playoffGames={playoffGames} teams={teams} predictions={allPredictions} onPredictWinner={predictMatchWinner} />
-              <BracketMatch round={1} sequence={5} isUpper={false} playoffGames={playoffGames} teams={teams} predictions={allPredictions} onPredictWinner={predictMatchWinner} />
-              <BracketMatch round={1} sequence={6} isUpper={false} playoffGames={playoffGames} teams={teams} predictions={allPredictions} onPredictWinner={predictMatchWinner} />
-              <BracketMatch round={1} sequence={7} isUpper={false} playoffGames={playoffGames} teams={teams} predictions={allPredictions} onPredictWinner={predictMatchWinner} />
-              <BracketMatch round={1} sequence={8} isUpper={false} playoffGames={playoffGames} teams={teams} predictions={allPredictions} onPredictWinner={predictMatchWinner} />
+              <BracketMatch round={1} sequence={1} isUpper={false} playoffGames={playoffGames} teams={teams} predictions={allPredictions} onPredictWinner={predictMatchWinner} isLocked={isLocked} />
+              <BracketMatch round={1} sequence={2} isUpper={false} playoffGames={playoffGames} teams={teams} predictions={allPredictions} onPredictWinner={predictMatchWinner} isLocked={isLocked} />
+              <BracketMatch round={1} sequence={3} isUpper={false} playoffGames={playoffGames} teams={teams} predictions={allPredictions} onPredictWinner={predictMatchWinner} isLocked={isLocked} />
+              <BracketMatch round={1} sequence={4} isUpper={false} playoffGames={playoffGames} teams={teams} predictions={allPredictions} onPredictWinner={predictMatchWinner} isLocked={isLocked} />
+              <BracketMatch round={1} sequence={5} isUpper={false} playoffGames={playoffGames} teams={teams} predictions={allPredictions} onPredictWinner={predictMatchWinner} isLocked={isLocked} />
+              <BracketMatch round={1} sequence={6} isUpper={false} playoffGames={playoffGames} teams={teams} predictions={allPredictions} onPredictWinner={predictMatchWinner} isLocked={isLocked} />
+              <BracketMatch round={1} sequence={7} isUpper={false} playoffGames={playoffGames} teams={teams} predictions={allPredictions} onPredictWinner={predictMatchWinner} isLocked={isLocked} />
+              <BracketMatch round={1} sequence={8} isUpper={false} playoffGames={playoffGames} teams={teams} predictions={allPredictions} onPredictWinner={predictMatchWinner} isLocked={isLocked} />
             </BracketColumn>
 
             <BracketColumn>
-              <BracketMatch round={2} sequence={1} isUpper={false} playoffGames={playoffGames} teams={teams} predictions={allPredictions} onPredictWinner={predictMatchWinner} />
-              <BracketMatch round={2} sequence={2} isUpper={false} playoffGames={playoffGames} teams={teams} predictions={allPredictions} onPredictWinner={predictMatchWinner} />
-              <BracketMatch round={2} sequence={3} isUpper={false} playoffGames={playoffGames} teams={teams} predictions={allPredictions} onPredictWinner={predictMatchWinner} />
-              <BracketMatch round={2} sequence={4} isUpper={false} playoffGames={playoffGames} teams={teams} predictions={allPredictions} onPredictWinner={predictMatchWinner} />
+              <BracketMatch round={2} sequence={1} isUpper={false} playoffGames={playoffGames} teams={teams} predictions={allPredictions} onPredictWinner={predictMatchWinner} isLocked={isLocked} />
+              <BracketMatch round={2} sequence={2} isUpper={false} playoffGames={playoffGames} teams={teams} predictions={allPredictions} onPredictWinner={predictMatchWinner} isLocked={isLocked} />
+              <BracketMatch round={2} sequence={3} isUpper={false} playoffGames={playoffGames} teams={teams} predictions={allPredictions} onPredictWinner={predictMatchWinner} isLocked={isLocked} />
+              <BracketMatch round={2} sequence={4} isUpper={false} playoffGames={playoffGames} teams={teams} predictions={allPredictions} onPredictWinner={predictMatchWinner} isLocked={isLocked} />
             </BracketColumn>
 
             <BracketColumn>
-              <BracketMatch round={3} sequence={1} isUpper={false} playoffGames={playoffGames} teams={teams} predictions={allPredictions} onPredictWinner={predictMatchWinner} />
-              <BracketMatch round={3} sequence={2} isUpper={false} playoffGames={playoffGames} teams={teams} predictions={allPredictions} onPredictWinner={predictMatchWinner} />
-              <BracketMatch round={3} sequence={3} isUpper={false} playoffGames={playoffGames} teams={teams} predictions={allPredictions} onPredictWinner={predictMatchWinner} />
-              <BracketMatch round={3} sequence={4} isUpper={false} playoffGames={playoffGames} teams={teams} predictions={allPredictions} onPredictWinner={predictMatchWinner} />
+              <BracketMatch round={3} sequence={1} isUpper={false} playoffGames={playoffGames} teams={teams} predictions={allPredictions} onPredictWinner={predictMatchWinner} isLocked={isLocked} />
+              <BracketMatch round={3} sequence={2} isUpper={false} playoffGames={playoffGames} teams={teams} predictions={allPredictions} onPredictWinner={predictMatchWinner} isLocked={isLocked} />
+              <BracketMatch round={3} sequence={3} isUpper={false} playoffGames={playoffGames} teams={teams} predictions={allPredictions} onPredictWinner={predictMatchWinner} isLocked={isLocked} />
+              <BracketMatch round={3} sequence={4} isUpper={false} playoffGames={playoffGames} teams={teams} predictions={allPredictions} onPredictWinner={predictMatchWinner} isLocked={isLocked} />
             </BracketColumn>
 
             <BracketColumn>
-              <BracketMatch round={4} sequence={1} isUpper={false} playoffGames={playoffGames} teams={teams} predictions={allPredictions} onPredictWinner={predictMatchWinner} />
-              <BracketMatch round={4} sequence={2} isUpper={false} playoffGames={playoffGames} teams={teams} predictions={allPredictions} onPredictWinner={predictMatchWinner} />
+              <BracketMatch round={4} sequence={1} isUpper={false} playoffGames={playoffGames} teams={teams} predictions={allPredictions} onPredictWinner={predictMatchWinner} isLocked={isLocked} />
+              <BracketMatch round={4} sequence={2} isUpper={false} playoffGames={playoffGames} teams={teams} predictions={allPredictions} onPredictWinner={predictMatchWinner} isLocked={isLocked} />
             </BracketColumn>
 
             <BracketColumn>
-              <BracketMatch round={5} sequence={1} isUpper={false} playoffGames={playoffGames} teams={teams} predictions={allPredictions} onPredictWinner={predictMatchWinner} />
-              <BracketMatch round={5} sequence={2} isUpper={false} playoffGames={playoffGames} teams={teams} predictions={allPredictions} onPredictWinner={predictMatchWinner} />
+              <BracketMatch round={5} sequence={1} isUpper={false} playoffGames={playoffGames} teams={teams} predictions={allPredictions} onPredictWinner={predictMatchWinner} isLocked={isLocked} />
+              <BracketMatch round={5} sequence={2} isUpper={false} playoffGames={playoffGames} teams={teams} predictions={allPredictions} onPredictWinner={predictMatchWinner} isLocked={isLocked} />
             </BracketColumn>
 
             <BracketColumn>
-              <BracketMatch round={6} sequence={1} isUpper={false} playoffGames={playoffGames} teams={teams} predictions={allPredictions} onPredictWinner={predictMatchWinner} />
+              <BracketMatch round={6} sequence={1} isUpper={false} playoffGames={playoffGames} teams={teams} predictions={allPredictions} onPredictWinner={predictMatchWinner} isLocked={isLocked} />
             </BracketColumn>
 
             <BracketColumn>
-              <BracketMatch round={7} sequence={1} isUpper={false} playoffGames={playoffGames} teams={teams} predictions={allPredictions} onPredictWinner={predictMatchWinner} />
+              <BracketMatch round={7} sequence={1} isUpper={false} playoffGames={playoffGames} teams={teams} predictions={allPredictions} onPredictWinner={predictMatchWinner} isLocked={isLocked} />
             </BracketColumn>
           </div>
         </div>
         {/* finals */}
         <BracketColumn>
           <div className="mr-4 mb-[335px]">
-            <BracketMatch round={8} sequence={1} isUpper={false} playoffGames={playoffGames} teams={teams} predictions={allPredictions} onPredictWinner={predictMatchWinner} />
+            <BracketMatch round={8} sequence={1} isUpper={false} playoffGames={playoffGames} teams={teams} predictions={allPredictions} onPredictWinner={predictMatchWinner} isLocked={isLocked} />
           </div>
         </BracketColumn>
       </div>
@@ -192,11 +193,12 @@ interface BracketMatchProps {
   playoffGames: PlayoffGame[];
   predictions: UpsertPrediction[];
   teams: Team[];
+  isLocked: boolean;
 
   onPredictWinner: (props: PredictMatchWinnerProps) => void;
 }
-function BracketMatch({ round, sequence, isUpper, playoffGames, predictions, teams, onPredictWinner }: BracketMatchProps) {
-  // TODO not efficient O(n^2) operation
+// TODO logic in here getting kinda complex, could look into a large scale refactor
+function BracketMatch({ round, sequence, isUpper, playoffGames, predictions, teams, isLocked, onPredictWinner }: BracketMatchProps) {
   const playoffGame = playoffGames.find((pg) => pg.round === round && pg.sequence === sequence && pg.isUpper === isUpper);
   const prediction = predictions.find((p) => p.playoffGameId === playoffGame?.id);
 
@@ -205,9 +207,35 @@ function BracketMatch({ round, sequence, isUpper, playoffGames, predictions, tea
     return <Skeleton className="w-[144px] h-[68px] rounded-sm animate-none" />;
   }
 
+  // if theres a prediction and a result
+  if (!!prediction && playoffGame.winnerId !== null) {
+    const predictedTeamLeft = teams.find((t) => t.id === prediction?.teamIdLeft);
+    const predictedTeamRight = teams.find((t) => t.id === prediction?.teamIdRight);
+
+    const isLeftPredictionWinner = predictedTeamLeft?.id === playoffGame.winnerId;
+    const isRightPredictionWinner = predictedTeamRight?.id === playoffGame.winnerId;
+    
+    const isPredictionCorrect = prediction.winnerId === playoffGame.winnerId;
+    const didPredictLeft = predictedTeamLeft?.id === prediction.winnerId;
+    const leftPredictionState = didPredictLeft ? isPredictionCorrect ? "CORRECT" : "INCORRECT" : "NEITHER";
+    const rightPredictionState = !didPredictLeft ? isPredictionCorrect ? "CORRECT" : "INCORRECT" : "NEITHER";
+
+    return (
+      <Card className="py-1 w-[144px] h-[68px] rounded-sm cursor-default">      
+        <CardContent className="px-1">
+          <BracketTeam team={predictedTeamLeft} isLoser={!isLeftPredictionWinner} predictionState={leftPredictionState} isAnimateDisabled />
+          <Separator className="my-1" />
+          <BracketTeam team={predictedTeamRight} isLoser={!isRightPredictionWinner} predictionState={rightPredictionState} isAnimateDisabled />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // there is a prediction
   if (prediction) {
     const teamLeft = teams.find((t) => t.id === prediction?.teamIdLeft);
     const teamRight = teams.find((t) => t.id === prediction?.teamIdRight);
+    
     return (
       <Card className="py-1 w-[144px] h-[68px] rounded-sm cursor-default">      
         <CardContent className="px-1">
@@ -372,6 +400,18 @@ function BracketMatch({ round, sequence, isUpper, playoffGames, predictions, tea
     );
   }
 
+  if (isLocked) {
+    return (
+      <Card className="py-1 w-[144px] h-[68px] rounded-sm">      
+        <CardContent className="px-1">
+          <BracketTeam team={teamLeft} isLoser={playoffGame.winnerId === teamRight?.id} isAnimateDisabled={true} />
+          <Separator className="my-1" />
+          <BracketTeam team={teamRight} isLoser={playoffGame.winnerId === teamLeft?.id} isAnimateDisabled={true} />
+        </CardContent>
+      </Card>
+    );
+  }
+
   const predictWinner = (winnerId?: string) => {
     if (!winnerId) {
       return;
@@ -409,24 +449,47 @@ function EmptyMatch() {
 
 interface BracketTeamProps {
   isAnimateDisabled?: boolean;
+  predictionState?: "NEITHER" | "CORRECT" | "INCORRECT";
   isLoser?: boolean;
   team?: Team;
 }
-function BracketTeam({ isAnimateDisabled = true, isLoser, team }: BracketTeamProps) {
-  return (
-    <div className={cn("flex", "flex-row", "items-center", "gap-1", isLoser && "opacity-50")}>
-      {!!team?.image ? (
+function BracketTeam({ isAnimateDisabled = true, predictionState = "NEITHER", isLoser, team }: BracketTeamProps) {
+  const renderImageSection = () => {
+    if (predictionState === "CORRECT") {
+      return (
+        <div className="rounded-sm size-6">
+          <Check className="stroke-green-500"/>
+        </div>
+      );
+    }
+    if (predictionState === "INCORRECT") {
+      return (
+        <div className="rounded-sm size-6">
+          <X className="stroke-red-500"/>
+        </div>
+      );
+    }
+    if (predictionState === "NEITHER" && !!team?.image) {
+      return (
         <img
           src={team.image}
           className="rounded-sm size-6"
           alt="Team logo"
         />
-      ) : (
-        <Skeleton className={cn("rounded-sm", "size-6", "shrink-0", isAnimateDisabled && "animate-none")} />
-      )}
+      );
+    }
+
+    return (
+      <Skeleton className={cn("rounded-sm", "size-6", "shrink-0", isAnimateDisabled && "animate-none")} />
+    );
+  }
+  
+  return (
+    <div className={cn("flex", "flex-row", "items-center", "gap-1", isLoser && "opacity-50")}>
+      {renderImageSection()}
       
       {!!team?.name ? (
-        <span className="text-xs whitespace-nowrap overflow-hidden text-ellipsis">
+        <span className={cn("text-xs", "whitespace-nowrap", "overflow-hidden", "text-ellipsis", predictionState === "CORRECT" && "text-green-500", predictionState === "INCORRECT" && "text-red-500")}>
           {team.name}
         </span>
       ) : (

@@ -60,6 +60,7 @@ const SavePredictionsSchema = z.object({
 });
 export type SavePredictions = z.infer<typeof SavePredictionsSchema>;
 
+// TODO validate predictions length, disallow partials
 export const savePredictions = createServerFn({ method: "POST" })
   .inputValidator(SavePredictionsSchema)
   .middleware([userRequiredMiddleware])

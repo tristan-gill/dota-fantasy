@@ -8,11 +8,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { PredictionBracket } from '@/components/PredictionBracket';
 import { Loader2 } from 'lucide-react';
 import { useAuthentication } from '@/lib/auth/client';
+import { getConfigs } from '@/services/configs';
 
 export const Route = createFileRoute('/predictions/$slug')({
   component: RouteComponent,
   loader: async ({ params }) => {
     const profile = await getProfileBySlug({ data: { slug: params.slug } });
+    const configs = await getConfigs();
+    const isAcceptingPredictions = configs?.find((c) => c.name === "isAcceptingPredictions")?.enabled;
     // const responses = await Promise.all([
     //   getPlayoffGames(),
     //   getTeams(),
@@ -21,6 +24,7 @@ export const Route = createFileRoute('/predictions/$slug')({
     
     return {
       profile,
+      isPredictionsLocked: !isAcceptingPredictions,
       // playoffGames: responses[0],
       // teams: responses[1],
       // predictions: responses[2]
@@ -30,9 +34,10 @@ export const Route = createFileRoute('/predictions/$slug')({
 })
 
 function RouteComponent() {
-  const { profile } = Route.useLoaderData();
+  const { profile, isPredictionsLocked } = Route.useLoaderData();
   const { userSession } = useAuthentication();
 
+  // TODO is useQuery worth it, or just use loaders
   const { data: playoffGames } = useQuery({ queryKey: ['playoffGames'], queryFn: getPlayoffGames, staleTime: Infinity });
   const { data: teams } = useQuery({ queryKey: ['teams'], queryFn: getTeams, staleTime: Infinity });
   const {
@@ -60,7 +65,13 @@ function RouteComponent() {
                 <Loader2 className="animate-spin size-20" />
               </div>
             ) : (
-              <PredictionBracket playoffGames={playoffGames} teams={teams} predictions={predictions || []} isOwner={isOwner} />
+              <PredictionBracket
+                playoffGames={playoffGames}
+                teams={teams}
+                predictions={predictions || []}
+                isOwner={isOwner}
+                isLocked={isPredictionsLocked}
+              />
             )}
           </Card>
         </TabsContent>

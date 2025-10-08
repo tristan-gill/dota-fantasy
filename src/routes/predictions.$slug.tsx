@@ -3,7 +3,7 @@ import { Card } from '@/components/ui/card';
 import { createFileRoute, ErrorComponent } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query';
 import { getProfileBySlug } from '@/services/profiles';
-import { getPlayoffGames, getPredictionsByProfileId, getTeams } from '@/services/bracket';
+import { getPlayoffGames, getPredictionsByUserId, getTeams } from '@/services/bracket';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { PredictionBracket } from '@/components/PredictionBracket';
 import { Loader2 } from 'lucide-react';
@@ -46,7 +46,7 @@ function RouteComponent() {
     isFetching: isPredictionsFetching
   } = useQuery({
     queryKey: ["predictions"],
-    queryFn: () => getPredictionsByProfileId({ data: { profileId: profile.id } })
+    queryFn: () => getPredictionsByUserId({ data: { userId: profile.userId } })
   });
 
   const isOwner = userSession?.user.id === profile.userId;

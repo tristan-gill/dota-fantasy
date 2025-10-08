@@ -4,7 +4,7 @@ import { eq } from "drizzle-orm";
 import { z } from "zod";
 
 import { db } from "@/lib/db";
-import { InsertPrediction, predictionsTable, playoffGamesTable, profilesTable, teamsTable, configsTable } from "@/lib/db/schema";
+import { InsertPrediction, predictionsTable, playoffGamesTable, profilesTable, teamsTable, configsTable, usersTable } from "@/lib/db/schema";
 import { userRequiredMiddleware } from "@/services/auth";
 
 export const getPlayoffGames = createServerFn({ method: "GET" })
@@ -32,17 +32,17 @@ export const getTeams = createServerFn({ method: "GET" })
     return teamsResponse;
   });
 
-const GetPredictionsByProfileIdSchema = z.object({
-  profileId: z.string().nonempty()
+const GetPredictionsByUserIdSchema = z.object({
+  userId: z.string().nonempty()
 });
-export type GetPredictionsByProfileId = z.infer<typeof GetPredictionsByProfileIdSchema>
-export const getPredictionsByProfileId = createServerFn({ method: "GET" })
-  .inputValidator(GetPredictionsByProfileIdSchema)
-  .handler(async ({ data: { profileId } }) => {
+export type GetPredictionsByUserId = z.infer<typeof GetPredictionsByUserIdSchema>
+export const getPredictionsByUserId = createServerFn({ method: "GET" })
+  .inputValidator(GetPredictionsByUserIdSchema)
+  .handler(async ({ data: { userId } }) => {
     const predictionsResponse = await db
       .select()
       .from(predictionsTable)
-      .where(eq(predictionsTable.profileId, profileId));
+      .where(eq(predictionsTable.userId, userId));
 
     return predictionsResponse;
   });
@@ -78,21 +78,11 @@ export const savePredictions = createServerFn({ method: "POST" })
       // TODO how does this look on the client side
       throw new Error("Predictions are closed!");
     }
-    
-    const profilesResponse = await db
-      .select()
-      .from(profilesTable)
-      .where(eq(profilesTable.userId, userSession.user.id))
-      .limit(1);
-    if (!profilesResponse || profilesResponse.length < 1) {
-      throw new Error("Can't save predictions without being logged in.");
-    }
 
-    const profile = profilesResponse[0];
     const predictions: InsertPrediction[] = data.predictions.map((p) => {
       return {
         playoffGameId: p.playoffGameId,
-        profileId: profile.id,
+        userId: userSession.user.id,
         teamIdLeft: p.teamIdLeft,
         teamIdRight: p.teamIdRight,
         winnerId: p.winnerId
@@ -101,7 +91,7 @@ export const savePredictions = createServerFn({ method: "POST" })
     // delete old predictions
     await db
       .delete(predictionsTable)
-      .where(eq(predictionsTable.profileId, profile.id));
+      .where(eq(predictionsTable.userId, userSession.user.id));
 
     // save new predictions
     await db
@@ -109,6 +99,7 @@ export const savePredictions = createServerFn({ method: "POST" })
       .values(predictions);
   });
 
+// TODO validate this
 export const GetPredictionActivity = createServerFn({ method: "GET"})
   .handler(async () => {
     const predictionActivityResponse = await db
@@ -120,7 +111,7 @@ export const GetPredictionActivity = createServerFn({ method: "GET"})
       })
       .from(predictionsTable)
       .innerJoin(playoffGamesTable, eq(playoffGamesTable.id, predictionsTable.playoffGameId))
-      .innerJoin(profilesTable, eq(predictionsTable.profileId, profilesTable.id))
+      .innerJoin(profilesTable, eq(predictionsTable.userId, profilesTable.userId))
       .innerJoin(teamsTable, eq(teamsTable.id, predictionsTable.winnerId))
       .where(eq(playoffGamesTable.round, 8)) // GRAND_FINALS_ROUND
       .limit(25);

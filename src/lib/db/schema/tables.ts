@@ -62,7 +62,7 @@ export const userRolesTable = pgTable("user_roles", {
 
 export const profilesTable = pgTable("profiles", {
   id: uuid().primaryKey().defaultRandom(),
-  userId: text("user_id").references(() => usersTable.id, { onDelete: "cascade" }),
+  userId: text("user_id").references(() => usersTable.id, { onDelete: "cascade" }).notNull(),
   slug: text().unique().notNull(),
   description: text(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -105,7 +105,7 @@ export type PlayoffGame = typeof playoffGamesTable.$inferSelect;
 export const predictionsTable = pgTable("predictions", {
   id: uuid().primaryKey().defaultRandom(),
   playoffGameId: uuid("playoff_game_id").references(() => playoffGamesTable.id, { onDelete: "cascade" }),
-  profileId: uuid("profile_id").references(() => profilesTable.id, { onDelete: "cascade" }),
+  userId: text("user_id").references(() => usersTable.id, { onDelete: "cascade" }),
   teamIdLeft: uuid("team_id_left"),
   teamIdRight: uuid("team_id_right"),
   winnerId: uuid("winner_id"),

@@ -57,6 +57,20 @@
       "when": 1759810289078,
       "tag": "0007_nasty_thena",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1759904596654,
+      "tag": "0008_hot_songbird",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1759905207421,
+      "tag": "0009_lying_madelyne_pryor",
+      "breakpoints": true
     }
   ]
 }

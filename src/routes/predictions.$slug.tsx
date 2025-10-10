@@ -3,7 +3,7 @@ import { Card } from '@/components/ui/card';
 import { createFileRoute, ErrorComponent } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query';
 import { getProfileBySlug } from '@/services/profiles';
-import { getPlayoffGames, getPredictionsByUserId, getTeams } from '@/services/bracket';
+import { getPlayoffMatches, getPredictionsByUserId, getTeams } from '@/services/bracket';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { PredictionBracket } from '@/components/PredictionBracket';
 import { Loader2 } from 'lucide-react';
@@ -17,15 +17,15 @@ export const Route = createFileRoute('/predictions/$slug')({
     const configs = await getConfigs();
     const isAcceptingPredictions = configs?.find((c) => c.name === "isAcceptingPredictions")?.enabled;
     // const responses = await Promise.all([
-    //   getPlayoffGames(),
+    //   getPlayoffMatches(),
     //   getTeams(),
-    //   getPlayoffGamesPredictionsByProfileId({ data: { profileId: profile.id } })
+    //   getPlayoffMatchesPredictionsByProfileId({ data: { profileId: profile.id } })
     // ]);
     
     return {
       profile,
       isPredictionsLocked: !isAcceptingPredictions,
-      // playoffGames: responses[0],
+      // playoffMatches: responses[0],
       // teams: responses[1],
       // predictions: responses[2]
     };
@@ -38,7 +38,7 @@ function RouteComponent() {
   const { userSession } = useAuthentication();
 
   // TODO is useQuery worth it, or just use loaders
-  const { data: playoffGames } = useQuery({ queryKey: ['playoffGames'], queryFn: getPlayoffGames, staleTime: Infinity });
+  const { data: playoffMatches } = useQuery({ queryKey: ['playoffMatches'], queryFn: getPlayoffMatches, staleTime: Infinity });
   const { data: teams } = useQuery({ queryKey: ['teams'], queryFn: getTeams, staleTime: Infinity });
   const {
     data: predictions,
@@ -60,13 +60,13 @@ function RouteComponent() {
         </TabsList>
         <TabsContent value="prediction">
           <Card className="p-6 max-w-[90vw] max-h-[calc(100vh-150px)] overflow-scroll">
-            {(!playoffGames || !teams || isPredictionsFetching) ? (
+            {(!playoffMatches || !teams || isPredictionsFetching) ? (
               <div className="h-[70vh] w-[90vw] flex flex-col items-center justify-center">
                 <Loader2 className="animate-spin size-20" />
               </div>
             ) : (
               <PredictionBracket
-                playoffGames={playoffGames}
+                playoffMatches={playoffMatches}
                 teams={teams}
                 predictions={predictions || []}
                 isOwner={isOwner}
@@ -77,12 +77,12 @@ function RouteComponent() {
         </TabsContent>
         <TabsContent value="results">
           <Card className="p-6 max-w-[90vw] max-h-[calc(100vh-150px)] overflow-scroll">
-            {(!playoffGames || !teams) ? (
+            {(!playoffMatches || !teams) ? (
               <div className="h-[70vh] w-[90vw] flex flex-col items-center justify-center">
                 <Loader2 className="animate-spin size-20" />
               </div>
             ) : (
-              <ResultsBracket playoffGames={playoffGames} teams={teams} />
+              <ResultsBracket playoffMatches={playoffMatches} teams={teams} />
             )}
           </Card>
         </TabsContent>

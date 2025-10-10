@@ -40,14 +40,16 @@ export const auth = betterAuth({
           if (!duplicateSlugCheck || duplicateSlugCheck.length < 1) {
             await db.insert(schema.profilesTable).values({
               userId: user.id,
-              slug: user.name
+              slug: user.name,
+              name: user.name,
             });
             return;
           }
 
           await db.insert(schema.profilesTable).values({
             userId: user.id,
-            slug: user.id
+            slug: user.id,
+            name: user.name,
           });
         }
       }

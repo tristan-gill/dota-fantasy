@@ -4,19 +4,20 @@ import { eq } from "drizzle-orm";
 import { z } from "zod";
 
 import { db } from "@/lib/db";
-import { InsertPrediction, predictionsTable, playoffGamesTable, profilesTable, teamsTable, configsTable, usersTable } from "@/lib/db/schema";
+import { InsertPrediction, predictionsTable, playoffMatchesTable, profilesTable, teamsTable, configsTable, usersTable } from "@/lib/db/schema";
 import { userRequiredMiddleware } from "@/services/auth";
 
-export const getPlayoffGames = createServerFn({ method: "GET" })
+// TODO move to table based services
+export const getPlayoffMatches = createServerFn({ method: "GET" })
   .handler(async () => {
-    const playoffGamesResponse = await db
+    const playoffMatchesResponse = await db
       .select()
-      .from(playoffGamesTable);
+      .from(playoffMatchesTable);
     
-    if (!playoffGamesResponse || playoffGamesResponse.length < 1) {
+    if (!playoffMatchesResponse || playoffMatchesResponse.length < 1) {
       throw new Error('Playoff games not found.');
     }
-    return playoffGamesResponse;
+    return playoffMatchesResponse;
   });
 
 export const getTeams = createServerFn({ method: "GET" })
@@ -48,7 +49,7 @@ export const getPredictionsByUserId = createServerFn({ method: "GET" })
   });
 
 const SavePredictionSchema = z.object({
-  playoffGameId: z.string().nonempty(),
+  playoffMatchId: z.string().nonempty(),
   teamIdLeft: z.string().nonempty(),
   teamIdRight: z.string().nonempty(),
   winnerId: z.string().nonempty()
@@ -81,7 +82,7 @@ export const savePredictions = createServerFn({ method: "POST" })
 
     const predictions: InsertPrediction[] = data.predictions.map((p) => {
       return {
-        playoffGameId: p.playoffGameId,
+        playoffMatchId: p.playoffMatchId,
         userId: userSession.user.id,
         teamIdLeft: p.teamIdLeft,
         teamIdRight: p.teamIdRight,
@@ -99,21 +100,23 @@ export const savePredictions = createServerFn({ method: "POST" })
       .values(predictions);
   });
 
-// TODO validate this
-export const GetPredictionActivity = createServerFn({ method: "GET"})
+// TODO validate this works
+export const getPredictionActivity = createServerFn({ method: "GET"})
   .handler(async () => {
     const predictionActivityResponse = await db
       .select({
         userId: profilesTable.userId,
         slug: profilesTable.slug,
+        name: profilesTable.name,
         teamName: teamsTable.name,
-        teamImage: teamsTable.image
+        teamImage: teamsTable.image,
+        createdAt: predictionsTable.createdAt
       })
       .from(predictionsTable)
-      .innerJoin(playoffGamesTable, eq(playoffGamesTable.id, predictionsTable.playoffGameId))
+      .innerJoin(playoffMatchesTable, eq(playoffMatchesTable.id, predictionsTable.playoffMatchId))
       .innerJoin(profilesTable, eq(predictionsTable.userId, profilesTable.userId))
       .innerJoin(teamsTable, eq(teamsTable.id, predictionsTable.winnerId))
-      .where(eq(playoffGamesTable.round, 8)) // GRAND_FINALS_ROUND
+      .where(eq(playoffMatchesTable.round, 8)) // GRAND_FINALS_ROUND
       .limit(25);
     return predictionActivityResponse;
   });

@@ -2,26 +2,26 @@ import { db } from "@/lib/db"; // TODO commenting this out breaks types
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
-import { PlayoffGame, Team } from "@/lib/db/schema";
+import { PlayoffMatch, Team } from "@/lib/db/schema";
 import { cn } from "@/lib/utils";
 
 interface ResultsBracketProps {
-  playoffGames: PlayoffGame[];
+  playoffMatches: PlayoffMatch[];
   teams: Team[];
 }
-export function ResultsBracket({ playoffGames, teams }: ResultsBracketProps) {
+export function ResultsBracket({ playoffMatches, teams }: ResultsBracketProps) {
   const fillMatch = (round: number, sequence: number, isUpper: boolean) => {
     // TODO not efficient at all
-    const playoffGame = playoffGames.find((pg) => pg.round === round && pg.sequence === sequence && pg.isUpper === isUpper);
-    const teamLeft = teams.find((t) => t.id === playoffGame?.teamIdLeft);
-    const teamRight = teams.find((t) => t.id === playoffGame?.teamIdRight);
+    const playoffMatch = playoffMatches.find((pg) => pg.round === round && pg.sequence === sequence && pg.isUpper === isUpper);
+    const teamLeft = teams.find((t) => t.id === playoffMatch?.teamIdLeft);
+    const teamRight = teams.find((t) => t.id === playoffMatch?.teamIdRight);
 
-    if (!playoffGame) {
+    if (!playoffMatch) {
       console.log(`Missing match round:${round} sequence:${sequence} isUpper:${isUpper}`);
       return null;
     }
 
-    return <BracketMatch playoffGame={playoffGame} teamLeft={teamLeft} teamRight={teamRight} />;
+    return <BracketMatch playoffMatch={playoffMatch} teamLeft={teamLeft} teamRight={teamRight} />;
   }
   
   return (
@@ -129,17 +129,17 @@ function BracketColumn({ children }: { children: React.ReactNode }) {
 }
 
 interface BracketMatchProps {
-  playoffGame: PlayoffGame;
+  playoffMatch: PlayoffMatch;
   teamLeft?: Team;
   teamRight?: Team;
 }
-function BracketMatch({ playoffGame, teamLeft, teamRight }: BracketMatchProps) {
+function BracketMatch({ playoffMatch, teamLeft, teamRight }: BracketMatchProps) {
   return (
     <Card className="py-1 w-[144px] h-[68px] rounded-sm">      
       <CardContent className="px-1">
-        <BracketTeam team={teamLeft} isLoser={playoffGame.winnerId === teamRight?.id} />
+        <BracketTeam team={teamLeft} isLoser={playoffMatch.winnerId === teamRight?.id} />
         <Separator className="my-1" />
-        <BracketTeam team={teamRight} isLoser={playoffGame.winnerId === teamLeft?.id} />
+        <BracketTeam team={teamRight} isLoser={playoffMatch.winnerId === teamLeft?.id} />
       </CardContent>
     </Card>
   );

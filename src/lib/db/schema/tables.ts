@@ -1,5 +1,7 @@
 import { boolean, index, integer, numeric, pgEnum, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
 
+// TODO split this into separate files
+
 export const usersTable = pgTable("users", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
@@ -64,6 +66,7 @@ export const profilesTable = pgTable("profiles", {
   id: uuid().primaryKey().defaultRandom(),
   userId: text("user_id").references(() => usersTable.id, { onDelete: "cascade" }).notNull(),
   slug: text().unique().notNull(),
+  name: text(),
   description: text(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 }, (table) => [
@@ -85,11 +88,12 @@ export const playersTable = pgTable("players", {
   steamId: text("steam_id").unique().notNull(),
   teamId: uuid("team_id").references(() => teamsTable.id, { onDelete: "cascade" }),
   position: integer().notNull(),
+  image: text(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 // export type Player = typeof players.$inferSelect;
 
-export const playoffGamesTable = pgTable("playoff_games", {
+export const playoffMatchesTable = pgTable("playoff_matches", {
   id: uuid().primaryKey().defaultRandom(),
   round: integer().notNull(),
   sequence: integer().notNull(),
@@ -99,12 +103,12 @@ export const playoffGamesTable = pgTable("playoff_games", {
   isUpper: boolean("is_upper").default(false),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
-// export interface PlayoffGameTabletidk = typeof playoffGames.$inferSelect;
-export type PlayoffGame = typeof playoffGamesTable.$inferSelect;
+// export interface PlayoffMatchTabletidk = typeof playoffMatches.$inferSelect;
+export type PlayoffMatch = typeof playoffMatchesTable.$inferSelect;
 
 export const predictionsTable = pgTable("predictions", {
   id: uuid().primaryKey().defaultRandom(),
-  playoffGameId: uuid("playoff_game_id").references(() => playoffGamesTable.id, { onDelete: "cascade" }),
+  playoffMatchId: uuid("playoff_match_id").references(() => playoffMatchesTable.id, { onDelete: "cascade" }),
   userId: text("user_id").references(() => usersTable.id, { onDelete: "cascade" }),
   teamIdLeft: uuid("team_id_left"),
   teamIdRight: uuid("team_id_right"),
@@ -117,7 +121,7 @@ export type Prediction = typeof predictionsTable.$inferSelect;
 // TODO screaming snake case?
 export const configNameEnum = pgEnum("config_name", [
   "isAcceptingPredictions",
-])
+]);
 export const configsTable = pgTable("configs", {
   id: uuid().primaryKey().defaultRandom(),
   name: configNameEnum().notNull(),
@@ -125,16 +129,48 @@ export const configsTable = pgTable("configs", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
-export const matchesTable = pgTable("matches", {
+export const gamesTable = pgTable("games", {
   id: uuid().primaryKey().defaultRandom(),
-  steamId: text("steam_id").notNull(),
-  isPlayoff: boolean("is_playoff").default(false),
+  gameId: text("game_id").notNull(),
+  playoffMatchId: uuid("playoff_match_id").references(() => playoffMatchesTable.id, { onDelete: "cascade" }),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
-export const playerMatchPerformancesTable = pgTable("player_match_performance", {
+
+export const fantasyPlayerTitleEnum = pgEnum("fantasy_title", [
+  "BRAWNY",
+  "DASHING",
+  "CANNY",
+  "BALANCED",
+  "EMERALD",
+  "CERULEAN",
+  "CRIMSON",
+  "OTHERWORLDLY",
+  "BESTIAL",
+  "HIRSUTE",
+  "ELEMENTAL",
+  "SACRIFICIAL",
+  "COVETED",
+  "GLAMOROUS",
+  "PACIFICST",
+  "ANT",
+  "BULL",
+  "PILGRIM",
+  "OCTOPUS",
+  "ACCOMPLICE",
+  "MULE",
+  "UNDERDOG",
+  "LOQUACIOUS",
+  "TORMENTED",
+  "PATIENT",
+  "ACOLYTE",
+  "DECISIVE"
+]);
+
+export const playerGamePerformancesTable = pgTable("player_game_performances", {
   id: uuid().primaryKey().defaultRandom(),
   playerId: uuid("player_id").references(() => playersTable.id, { onDelete: "cascade" }),
-  matchId: uuid("match_id").references(() => matchesTable.id, { onDelete: "cascade" }),
+  gameId: uuid("game_id").references(() => gamesTable.id, { onDelete: "cascade" }),
   kills: integer(),
   deaths: integer(),
   lastHits: integer("last_hits"),
@@ -145,7 +181,7 @@ export const playerMatchPerformancesTable = pgTable("player_match_performance", 
   campsStacked: integer("camps_stacked"),
   runesGrabbed: integer("runes_grabbed"),
   watchersTaken: integer("watchers_taken"),
-  lotusesGrabbed: integer("lotuses_grabbed"),
+  // lotusesGrabbed: integer("lotuses_grabbed"),
   roshanKills: integer("roshan_kills"),
   teamfightParticipation: numeric("teamfight_participation"),
   stunTime: numeric("stun_time"),
@@ -153,6 +189,77 @@ export const playerMatchPerformancesTable = pgTable("player_match_performance", 
   courierKills: integer("courier_kills"),
   firstbloodClaimed: boolean("firstblood_claimed"),
   smokesUsed: integer("smokes_used"),
+  titles: fantasyPlayerTitleEnum().array(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
-export type InsertPlayerMatchPerformance = typeof playerMatchPerformancesTable.$inferInsert;
+export type InsertPlayerGamePerformance = typeof playerGamePerformancesTable.$inferInsert;
+
+export const fantasyTitlesTable = pgTable("fantasy_titles", {
+  id: uuid().primaryKey().defaultRandom(),
+  title: fantasyPlayerTitleEnum().notNull(),
+  modifier: numeric().notNull(),
+  name: text(),
+  description: text(),
+  isSecondary: boolean("is_secondary").default(false),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+export type FantasyPlayerTitleEnum = typeof fantasyPlayerTitleEnum.enumValues[number];
+
+export const userTitlesTable = pgTable("user_titles", {
+  id: uuid().primaryKey().defaultRandom(),
+  userId: text("user_id").references(() => usersTable.id, { onDelete: "cascade" }).notNull(),
+  role: integer().notNull(),
+  primaryTitle: fantasyPlayerTitleEnum("primary_title").notNull(),
+  secondaryTitle: fantasyPlayerTitleEnum("secondary_title").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  deletedAt: timestamp("deleted_at"),
+});
+
+export const bannerTypeEnum = pgEnum("banner_type_enum", [
+  // RED
+  "KILLS",
+  "DEATHS",
+  "LAST_HITS",
+  "GPM",
+  "MADSTONE_COUNT",
+  "TOWER_KILLS",
+
+  // BLUE
+  "WARDS_PLACED",
+  "CAMPS_STACKED",
+  "RUNES_GRABBED",
+  "WATCHERS_TAKEN",
+  "SMOKES_USE",
+
+  // GREEN
+  "ROSHAN_KILLS",
+  "TEAMFIGHT_PARTICIPATION",
+  "STUN_TIME",
+  "TORMENTOR_KILLS",
+  "COURIER_KILLS",
+  "FIRSTBLOOD_CLAIMED"
+]);
+export const userBannersTable = pgTable("user_banners", {
+  id: uuid().primaryKey().defaultRandom(),
+  userId: text("user_id").references(() => usersTable.id, { onDelete: "cascade" }).notNull(),
+  role: integer().notNull(),
+  bannerTop: bannerTypeEnum("banner_top"),
+  bannerTopMultiplier: numeric("banner_top_multiplier"),
+  bannerMiddle: bannerTypeEnum("banner_middle"),
+  bannerMiddleMultiplier: numeric("banner_middle_multiplier"),
+  bannerBottom: bannerTypeEnum("banner_bottom"),
+  bannerBottomMultiplier: numeric("banner_bottom_multiplier"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  deletedAt: timestamp("deleted_at"),
+});
+
+export const userRostersTable = pgTable("user_rosters_table", {
+  id: uuid().primaryKey().defaultRandom(),
+  userId: text("user_id").references(() => usersTable.id, { onDelete: "cascade" }).notNull(),
+  carryPlayerId: uuid("carry_player_id").references(() => playersTable.id, { onDelete: "cascade" }),
+  midPlayerId: uuid("mid_player_id").references(() => playersTable.id, { onDelete: "cascade" }),
+  offlanePlayerId: uuid("offlane_player_id").references(() => playersTable.id, { onDelete: "cascade" }),
+  softSupportPlayerId: uuid("soft_support_player_id").references(() => playersTable.id, { onDelete: "cascade" }),
+  hardSupportPlayerId: uuid("hard_support_player_id").references(() => playersTable.id, { onDelete: "cascade" }),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});

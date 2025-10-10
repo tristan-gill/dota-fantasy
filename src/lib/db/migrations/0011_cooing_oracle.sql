@@ -1,0 +1,1 @@
+ALTER TABLE "player_game_performances" ADD COLUMN "titles" "fantasy_title"[];

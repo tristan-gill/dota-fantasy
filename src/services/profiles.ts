@@ -1,7 +1,7 @@
 import { db } from "@/lib/db";
-import { accountsTable, profilesTable, userRolesTable, usersTable } from "@/lib/db/schema";
+import { accountsTable, playersTable, profilesTable, userRolesTable, usersTable } from "@/lib/db/schema";
 import { createServerFn } from "@tanstack/react-start";
-import { eq } from "drizzle-orm";
+import { eq, isNull } from "drizzle-orm";
 import { z } from "zod";
 import { userRequiredMiddleware } from "@/services/auth";
 
@@ -67,3 +67,37 @@ export const getUserRole = createServerFn({ method: "GET" })
 
     return userRoleResponse[0];
   });
+
+// function delay(time: number) {
+//   return new Promise(resolve => setTimeout(resolve, time));
+// }
+// export const populatePlayerImages = createServerFn({ method: "GET" })
+//   .middleware([userRequiredMiddleware])
+//   .handler(async ({ context: { userSession } }) => {
+//     const playersResponse = await db
+//       .select()
+//       .from(playersTable)
+//       .where(isNull(playersTable.image));
+
+//     if (!playersResponse) {
+//       throw new Error("Unable to find players.");
+//     }
+
+//     for (const player of playersResponse) {
+//       const playerResponse = await fetch(`https://api.opendota.com/api/players/${player.steamId}`);
+//       if (playerResponse.status !== 200) {
+//         console.error(playerResponse.status);
+//         console.log(player)
+//         throw new Error("Unexpected response when getting player data.");
+//       }
+//       const playerData = await playerResponse.json();
+
+//       console.log(player.name)
+//       await db
+//         .update(playersTable)
+//         .set({ image: playerData.profile.avatarfull })
+//         .where(eq(playersTable.id, player.id));
+      
+//       await delay(1200);
+//     }
+//   });

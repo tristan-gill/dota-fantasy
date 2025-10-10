@@ -2,22 +2,26 @@ Welcome to your new TanStack app!
 
 # TODO
 - fantasy page
-  - similar to TI fantasy but simplify the modifiers to a roll for 3 mods with pseudo-rarity
-  - select from any players you want
+  - similar to TI fantasy but simplified slightly
+  - select from any players you want for each(?) role
+  - roll for new titles/subtitles (one roll changes both)
+  - roll for new banners + banner tiers (one roll changes the banners and their tiers)
+
+  - could maybe toggle on for group stage as testing?
+- fantasy home page
+  - current top users, links to their fantasy roster
+  - current top players and their base fantasy scores
 - predictions home
-  - recent activity
   - current top predictors
-- admin page
-  - ability to add result to bracket
-  - ability to input completed games to fuel predictions and fantasy
-    - can we connect the dbtable teams to the stats teams?
 - team page
+  - can we connect the dbtable teams to the stats teams?
   - show team logo and name
   - show whos on the team
   - show results
 - player page
   - player name and logo
   - what team they are on
+  - base fantasy points
   - recent results
 
 

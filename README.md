@@ -1,5 +1,3 @@
-Welcome to your new TanStack app! 
-
 # TODO
 - fantasy page
   - similar to TI fantasy but simplified slightly

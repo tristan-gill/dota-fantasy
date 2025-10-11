@@ -194,11 +194,11 @@ export const playerGamePerformancesTable = pgTable("player_game_performances", {
 });
 export type InsertPlayerGamePerformance = typeof playerGamePerformancesTable.$inferInsert;
 
-export const fantasyTitlesTable = pgTable("fantasy_titles", {
+export const titlesTable = pgTable("titles", {
   id: uuid().primaryKey().defaultRandom(),
   title: fantasyPlayerTitleEnum().notNull(),
   modifier: numeric().notNull(),
-  name: text(),
+  name: text().notNull(),
   description: text(),
   isSecondary: boolean("is_secondary").default(false),
   createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -209,12 +209,18 @@ export const userTitlesTable = pgTable("user_titles", {
   id: uuid().primaryKey().defaultRandom(),
   userId: text("user_id").references(() => usersTable.id, { onDelete: "cascade" }).notNull(),
   role: integer().notNull(),
-  primaryTitle: fantasyPlayerTitleEnum("primary_title").notNull(),
-  secondaryTitle: fantasyPlayerTitleEnum("secondary_title").notNull(),
+  primaryTitleId: uuid("primary_title_id").references(() => titlesTable.id, { onDelete: "cascade" }).notNull(),
+  secondaryTitleId: uuid("secondary_title_id").references(() => titlesTable.id, { onDelete: "cascade" }).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   deletedAt: timestamp("deleted_at"),
 });
+export type UserTitle = typeof userTitlesTable.$inferSelect;
 
+export const bannerColorEnum = pgEnum("banner_color_enum", [
+  "RED",
+  "BLUE",
+  "GREEN"
+]);
 export const bannerTypeEnum = pgEnum("banner_type_enum", [
   // RED
   "KILLS",
@@ -239,21 +245,33 @@ export const bannerTypeEnum = pgEnum("banner_type_enum", [
   "COURIER_KILLS",
   "FIRSTBLOOD_CLAIMED"
 ]);
+
+export const bannersTable = pgTable("banners", {
+  id: uuid().primaryKey().defaultRandom(),
+  bannerType: bannerTypeEnum("banner_type").notNull(),
+  name: text(),
+  description: text(),
+  bannerColor: bannerColorEnum("banner_color").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+export type Banner = typeof bannersTable.$inferSelect;
+
 export const userBannersTable = pgTable("user_banners", {
   id: uuid().primaryKey().defaultRandom(),
   userId: text("user_id").references(() => usersTable.id, { onDelete: "cascade" }).notNull(),
   role: integer().notNull(),
-  bannerTop: bannerTypeEnum("banner_top"),
-  bannerTopMultiplier: numeric("banner_top_multiplier"),
-  bannerMiddle: bannerTypeEnum("banner_middle"),
-  bannerMiddleMultiplier: numeric("banner_middle_multiplier"),
-  bannerBottom: bannerTypeEnum("banner_bottom"),
-  bannerBottomMultiplier: numeric("banner_bottom_multiplier"),
+  bannerTopId: uuid("banner_top_id").references(() => bannersTable.id, { onDelete: "cascade" }).notNull(),
+  bannerTopMultiplier: numeric("banner_top_multiplier").notNull(),
+  bannerMiddleId: uuid("banner_middle_id").references(() => bannersTable.id, { onDelete: "cascade" }).notNull(),
+  bannerMiddleMultiplier: numeric("banner_middle_multiplier").notNull(),
+  bannerBottomId: uuid("banner_bottom_id").references(() => bannersTable.id, { onDelete: "cascade" }).notNull(),
+  bannerBottomMultiplier: numeric("banner_bottom_multiplier").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   deletedAt: timestamp("deleted_at"),
 });
+export type UserBanner = typeof userBannersTable.$inferSelect;
 
-export const userRostersTable = pgTable("user_rosters_table", {
+export const userRostersTable = pgTable("user_rosters", {
   id: uuid().primaryKey().defaultRandom(),
   userId: text("user_id").references(() => usersTable.id, { onDelete: "cascade" }).notNull(),
   carryPlayerId: uuid("carry_player_id").references(() => playersTable.id, { onDelete: "cascade" }),

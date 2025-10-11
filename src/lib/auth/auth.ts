@@ -51,6 +51,10 @@ export const auth = betterAuth({
             slug: user.id,
             name: user.name,
           });
+
+          await db.insert(schema.userRostersTable).values({
+            userId: user.id
+          });
         }
       }
     }

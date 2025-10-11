@@ -1,1 +1,0 @@
-ALTER TABLE "matches" ADD COLUMN "is_playoff" boolean DEFAULT false;

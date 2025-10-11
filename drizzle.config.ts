@@ -5,6 +5,6 @@ export default defineConfig({
     schema: "./src/lib/db/schema",
     dialect: "postgresql",
     dbCredentials: {
-        url: process.env.NETLIFY_DATABASE_URL!
+        url: process.env.NETLIFY_DATABASE_URL!,
     }
 })

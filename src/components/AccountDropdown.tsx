@@ -1,4 +1,4 @@
-import { LogInIcon, LogOutIcon, CircleUserRoundIcon } from "lucide-react";
+import { LogInIcon, LogOutIcon, CircleUserRoundIcon, UsersIcon, TrendingUpDownIcon } from "lucide-react";
 
 import { authClient, useAuthentication } from "@/lib/auth/client";
 import { Button } from "@/components/ui/button";
@@ -10,33 +10,30 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
-import { createLink, useNavigate } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { SignedOut } from "@/components/SignedOut";
 import { SignedIn } from "@/components/SignedIn";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { getProfileByUserId } from "@/services/profiles";
 import { useState } from "react";
-
-const ItemLink = createLink(DropdownMenuItem)
+import { getProfileByUserId } from "@/services/profiles";
 
 export function AccountDropdown() {
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
-  
-  // TODO this way vs current?
-  // const { data: session } = authClient.useSession();
+
   const { userSession } = useAuthentication();
   const navigate = useNavigate();
-  
-  const { data: profile } = useQuery({
+
+  const {
+    data: profile
+  } = useQuery({
     queryKey: ["profileByUserId", userSession?.user.id],
     queryFn: () => getProfileByUserId({ data: { userId: userSession?.user.id || "" }}),
-    enabled: !!userSession?.user.id,
+    enabled: !!userSession?.user.id
   });
 
   const signOut = async () => {
     const response = await authClient.signOut();
-    console.log('pls')
     await queryClient.invalidateQueries();
     // TODO other invalidation
     if (response.data?.success) {
@@ -64,9 +61,10 @@ export function AccountDropdown() {
 
       <DropdownMenuContent align="end" onCloseAutoFocus={(e) => e.preventDefault()}>
         <SignedOut>
-          <DropdownMenuItem onClick={() => authClient.signIn.social({ provider: "discord" })}>
-            <LogInIcon />
-            Login
+          <DropdownMenuItem asChild>
+            <Link to="/login">
+              <LogInIcon /> Login
+            </Link>
           </DropdownMenuItem>
         </SignedOut>
 
@@ -81,19 +79,19 @@ export function AccountDropdown() {
               </p>
             </div>
           </DropdownMenuLabel>
-
+          
           <DropdownMenuSeparator />
           
-          <ItemLink
-            className="cursor-pointer"
-            to="/predictions/$slug"
-            params={
-              {slug: profile?.slug || ""}
-            }
-            onClick={() => setOpen(false)}
-          >
-            My Predictions
-          </ItemLink>
+          <DropdownMenuItem asChild>
+            <Link to="/rosters/$slug" params={{ slug: profile?.slug || ""}}>
+              <UsersIcon /> Your roster
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild>
+            <Link to="/predictions/$slug" params={{ slug: profile?.slug || ""}}>
+              <TrendingUpDownIcon /> Your predictions
+            </Link>
+          </DropdownMenuItem>
 
           <DropdownMenuSeparator />
           

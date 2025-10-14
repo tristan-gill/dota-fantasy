@@ -1,0 +1,1 @@
+ALTER TABLE "user_roster_scores" RENAME COLUMN "updates_at" TO "updated_at";

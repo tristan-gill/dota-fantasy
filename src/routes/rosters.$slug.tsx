@@ -1,18 +1,21 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Command, CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator } from "@/components/ui/command";
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { useAuthentication } from "@/lib/auth/client";
 import { Banner, UserBanner, UserTitle } from "@/lib/db/schema";
 import { cn } from "@/lib/utils";
+import { getConfig, getConfigs } from "@/services/configs";
 import { getProfileBySlug } from "@/services/profiles";
-import { getBanners, getPlayerTeams, getRosterRolls, getTitles, getUserBanners, getUserRoster, getUserTitles, insertBannerRoll, insertTitleRoll, PlayerTeam, saveRosterPlayer } from "@/services/rosterService";
+import { getBanners, getPlayerTeams, getRosterRolls, getTitles, getUserBanners, getUserRoster, getUserRosterScore, getUserTitles, insertBannerRoll, insertTitleRoll, PlayerTeam, saveRosterPlayer } from "@/services/rosterService";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, useRouter } from '@tanstack/react-router'
-import { Check, CheckIcon, ChevronsUpDownIcon, Loader2 } from "lucide-react";
+import { Check, CheckIcon, ChevronsUpDownIcon, DicesIcon, InfoIcon, Loader2, ShuffleIcon } from "lucide-react";
 import { PropsWithChildren, useMemo, useState } from "react";
 
 interface RollData {
@@ -51,7 +54,7 @@ interface RosterData {
   hardSupportBanner?: UserBanner;
 }
 
-export const Route = createFileRoute('/roster/$slug')({
+export const Route = createFileRoute('/rosters/$slug')({
   component: RouteComponent,
   loader: async ({ params: { slug } }) => {
     const profile = await getProfileBySlug({ data: { slug } });
@@ -61,7 +64,8 @@ export const Route = createFileRoute('/roster/$slug')({
       getUserTitles({ data: { userId: profile.userId }}),
       getUserBanners({ data: { userId: profile.userId }}),
       getPlayerTeams(),
-      getRosterRolls()
+      getRosterRolls(),
+      getUserRosterScore({ data: { userId: profile.userId }})
     ]);
 
     const userRoster = responses[0];
@@ -102,7 +106,8 @@ export const Route = createFileRoute('/roster/$slug')({
     return {
       rosterData,
       playerTeams,
-      rollData
+      rollData,
+      userRosterScore: responses[5]
     };
   }
   // TODO errorcomponents all over
@@ -110,8 +115,16 @@ export const Route = createFileRoute('/roster/$slug')({
 
 function RouteComponent() {
   const router = useRouter();
-  const { rosterData, playerTeams, rollData } = Route.useLoaderData();
+  const { rosterData, playerTeams, rollData, userRosterScore } = Route.useLoaderData();
+  const { userSession } = useAuthentication();
   const [isSaving, setIsSaving] = useState(false);
+
+  const { data: isRosterOpen } = useQuery({
+    queryKey: ["configs"],
+    queryFn: () => getConfig({ data: { name: "IS_ROSTER_OPEN" }}),
+  });
+  
+  const isRollDataShowing = userSession?.user.id === rosterData.userId && isRosterOpen;
 
   const onSelectPlayer = async (playerId: string, role: number) => {
     if (isSaving) {
@@ -146,67 +159,131 @@ function RouteComponent() {
   };
 
   return (
-    <div>
-      <PlayerCard
-        player={rosterData.carryPlayer}
-        userBanner={rosterData.carryBanner}
-        userTitle={rosterData.carryTitle}
-        playerTeams={playerTeams}
-        role={1}
-        rollData={rollData}
-        isLoading={isSaving}
-        onSelectPlayer={(playerId: string) => onSelectPlayer(playerId, 1)}
-        onRollTitle={onRollTitle}
-        onRollBanner={onRollBanner}
-      />
-      <PlayerCard
-        player={rosterData.midPlayer}
-        userBanner={rosterData.midBanner}
-        userTitle={rosterData.midTitle}
-        playerTeams={playerTeams}
-        role={2}
-        rollData={rollData}
-        isLoading={isSaving}
-        onSelectPlayer={(playerId: string) => onSelectPlayer(playerId, 2)}
-        onRollTitle={onRollTitle}
-        onRollBanner={onRollBanner}
-      />
-      <PlayerCard
-        player={rosterData.offlanePlayer}
-        userBanner={rosterData.offlaneBanner}
-        userTitle={rosterData.offlaneTitle}
-        playerTeams={playerTeams}
-        role={3}
-        rollData={rollData}
-        isLoading={isSaving}
-        onSelectPlayer={(playerId: string) => onSelectPlayer(playerId, 3)}
-        onRollTitle={onRollTitle}
-        onRollBanner={onRollBanner}
-      />
-      <PlayerCard
-        player={rosterData.softSupportPlayer}
-        userBanner={rosterData.softSupportBanner}
-        userTitle={rosterData.softSupportTitle}
-        playerTeams={playerTeams}
-        role={4}
-        rollData={rollData}
-        onSelectPlayer={(playerId: string) => onSelectPlayer(playerId, 4)}
-        isLoading={isSaving}
-        onRollTitle={onRollTitle}
-        onRollBanner={onRollBanner}
-      />
-      <PlayerCard
-        player={rosterData.hardSupportPlayer}
-        userBanner={rosterData.hardSupportBanner}
-        userTitle={rosterData.hardSupportTitle}
-        playerTeams={playerTeams}
-        role={5}
-        rollData={rollData}
-        onSelectPlayer={(playerId: string) => onSelectPlayer(playerId, 5)}
-        isLoading={isSaving}
-        onRollTitle={onRollTitle}
-        onRollBanner={onRollBanner}
-      />
+    <div className="flex flex-col">
+      
+      <div className="flex flex-row justify-between items-center mb-4">
+        <div>
+          {!!userRosterScore && (
+            <div>
+              <span className="text-sm text-muted-foreground">
+                Total score:{" "}
+              </span>
+              <span className="font-semibold">
+                {userRosterScore.totalScore.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+              </span>
+            </div>
+          )}
+        </div>
+
+        {isRollDataShowing && (
+          <div className="flex flex-row items-center">
+            <div className="mr-4 text-sm text-muted-foreground">{rollData.bannerRolls - rollData.bannerRollsUsed} Banner rolls</div>
+            <div className="mr-3 text-sm text-muted-foreground">{rollData.titleRolls - rollData.titleRollsUsed} Title rolls</div>
+            
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button className="rounded-full cursor-pointer w-[18px]" variant="ghost" size="icon">
+                  <InfoIcon />
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[425px]">
+                <DialogHeader>
+                  <DialogTitle>Fantasy roster</DialogTitle>
+                  <DialogDescription>
+                    Build your perfect team then use the roll mechanics to enhance your score!
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-4">
+                  TODO
+                </div>
+                <DialogFooter>
+                  <DialogClose asChild>
+                    <Button variant="outline">Close</Button>
+                  </DialogClose>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          </div>
+        )}
+      </div>
+
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-row gap-4 justify-center">
+          <PlayerCard
+            player={rosterData.carryPlayer}
+            userBanner={rosterData.carryBanner}
+            userTitle={rosterData.carryTitle}
+            playerTeams={playerTeams}
+            playerScore={userRosterScore?.carryPlayerScore}
+            role={1}
+            rollData={rollData}
+            isLoading={isSaving}
+            isRosterLocked={!isRosterOpen}
+            onSelectPlayer={(playerId: string) => onSelectPlayer(playerId, 1)}
+            onRollTitle={onRollTitle}
+            onRollBanner={onRollBanner}
+          />
+          <PlayerCard
+            player={rosterData.midPlayer}
+            userBanner={rosterData.midBanner}
+            userTitle={rosterData.midTitle}
+            playerTeams={playerTeams}
+            playerScore={userRosterScore?.midPlayerScore}
+            role={2}
+            rollData={rollData}
+            isLoading={isSaving}
+            isRosterLocked={!isRosterOpen}
+            onSelectPlayer={(playerId: string) => onSelectPlayer(playerId, 2)}
+            onRollTitle={onRollTitle}
+            onRollBanner={onRollBanner}
+          />
+          <PlayerCard
+            player={rosterData.offlanePlayer}
+            userBanner={rosterData.offlaneBanner}
+            userTitle={rosterData.offlaneTitle}
+            playerTeams={playerTeams}
+            playerScore={userRosterScore?.offlanePlayerScore}
+            role={3}
+            rollData={rollData}
+            isLoading={isSaving}
+            isRosterLocked={!isRosterOpen}
+            onSelectPlayer={(playerId: string) => onSelectPlayer(playerId, 3)}
+            onRollTitle={onRollTitle}
+            onRollBanner={onRollBanner}
+          />
+        </div>
+        
+        <div className="flex flex-row gap-4 justify-center">
+          <PlayerCard
+            player={rosterData.softSupportPlayer}
+            userBanner={rosterData.softSupportBanner}
+            userTitle={rosterData.softSupportTitle}
+            playerTeams={playerTeams}
+            playerScore={userRosterScore?.softSupportPlayerScore}
+            role={4}
+            rollData={rollData}
+            isLoading={isSaving}
+            isRosterLocked={!isRosterOpen}
+            onSelectPlayer={(playerId: string) => onSelectPlayer(playerId, 4)}
+            onRollTitle={onRollTitle}
+            onRollBanner={onRollBanner}
+          />
+          <PlayerCard
+            player={rosterData.hardSupportPlayer}
+            userBanner={rosterData.hardSupportBanner}
+            userTitle={rosterData.hardSupportTitle}
+            playerTeams={playerTeams}
+            playerScore={userRosterScore?.hardSupportPlayerScore}
+            role={5}
+            rollData={rollData}
+            isLoading={isSaving}
+            isRosterLocked={!isRosterOpen}
+            onSelectPlayer={(playerId: string) => onSelectPlayer(playerId, 5)}
+            onRollTitle={onRollTitle}
+            onRollBanner={onRollBanner}
+          />
+        </div>
+      </div>
     </div>
   );
 }
@@ -216,10 +293,12 @@ interface PlayerCardProps {
   player?: PlayerTeam;
   userBanner?: UserBanner;
   userTitle?: UserTitle;
+  playerScore?: number;
   playerTeams: PlayerTeam[];
   role: number;
   rollData: RollData;
   isLoading: boolean;
+  isRosterLocked: boolean;
   onSelectPlayer: (playerId: string) => void;
   onRollTitle: (role: number) => void;
   onRollBanner: (role: number) => void;
@@ -232,6 +311,8 @@ function PlayerCard({
   playerTeams,
   role,
   rollData,
+  playerScore,
+  isRosterLocked,
   onSelectPlayer,
   onRollTitle,
   onRollBanner
@@ -268,20 +349,19 @@ function PlayerCard({
 
   if (!player) {
     return (
-      <Card>
+      <Card className="w-[338px]">
         <CardHeader>
           <CardTitle>Select a player</CardTitle>
           <CardDescription>Position {role}</CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="m-auto">
           <PlayerSelectButton
             playerTeams={playerTeams}
             roleFilter={role}
-            isLoading={isLoading}
-            variant="outline"
+            isDisabled={isLoading || isRosterLocked}
             onSelectPlayer={(playerId) => onSelectPlayer(playerId)}
           >
-            Select player
+            Choose a player
           </PlayerSelectButton>
         </CardContent>
       </Card>
@@ -289,7 +369,7 @@ function PlayerCard({
   }
 
   return (
-    <Card className="w-md">
+    <Card className="w-[338px]">
       <CardHeader>
         <CardTitle>{player?.playerName}</CardTitle>
         <CardDescription className="max-w-sm whitespace-nowrap overflow-hidden text-ellipsis">
@@ -305,8 +385,8 @@ function PlayerCard({
           </CardAction>
         )}
       </CardHeader>
-      <CardContent>
-        <div className="flex flex-row gap-2">
+      <CardContent className="flex flex-col grow gap-3">
+        <div className="flex flex-row gap-2 mb-auto">
           {!!primaryTitle && (
             <TitleElement
               name={primaryTitle.name}
@@ -324,42 +404,56 @@ function PlayerCard({
           )}
         </div>
 
-        <div>
+        <div className="flex flex-col gap-1">
           <BannerElement banner={topBanner} multiplier={userBanner?.bannerTopMultiplier} />
           <BannerElement banner={middleBanner} multiplier={userBanner?.bannerMiddleMultiplier} />
           <BannerElement banner={bottomBanner} multiplier={userBanner?.bannerBottomMultiplier} />
         </div>
 
-        <PlayerSelectButton
-          playerTeams={playerTeams}
-          roleFilter={role}
-          isLoading={isLoading}
-          variant="link"
-          onSelectPlayer={(playerId) => onSelectPlayer(playerId)}
-        >
-          Replace player
-        </PlayerSelectButton>
-
-        {rollData.titleRollsUsed < rollData.titleRolls && (
-          <Button
-            variant="outline"
-            className="cursor-pointer"
-            disabled={isLoading}
-            onClick={() => onRollTitle(role)}
-          >
-            Roll titles
-          </Button>
+        {!!playerScore && (
+          <>
+            <Separator />
+            <div className="flex flex-row justify-between">
+              <div className="text-muted-foreground">
+                Score:
+              </div>
+              <div className="font-semibold">
+                {playerScore.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+              </div>
+            </div>
+          </>
         )}
+        {!isRosterLocked && (
+          <div className="flex flex-row gap-3">
+            <PlayerSelectButton
+              playerTeams={playerTeams}
+              roleFilter={role}
+              isDisabled={isLoading}
+              onSelectPlayer={(playerId) => onSelectPlayer(playerId)}
+            >
+              <ShuffleIcon /> Player
+            </PlayerSelectButton>
 
-        {rollData.bannerRollsUsed < rollData.bannerRolls && (
-          <Button
-            variant="outline"
-            className="cursor-pointer"
-            disabled={isLoading}
-            onClick={() => onRollBanner(role)}
-          >
-            Roll banners
-          </Button>
+            <Button
+              variant="outline"
+              className="cursor-pointer"
+              disabled={isLoading || rollData.titleRollsUsed >= rollData.titleRolls}
+              onClick={() => onRollTitle(role)}
+              size="sm"
+            >
+              <DicesIcon /> Titles
+            </Button>
+
+            <Button
+              variant="outline"
+              className="cursor-pointer"
+              disabled={isLoading || rollData.bannerRollsUsed >= rollData.bannerRolls}
+              onClick={() => onRollBanner(role)}
+              size="sm"
+            >
+              <DicesIcon /> Banners
+            </Button>
+          </div>
         )}
       </CardContent>
     </Card>
@@ -368,7 +462,7 @@ function PlayerCard({
 
 interface BannerElementProps {
   banner?: Banner;
-  multiplier?: string;
+  multiplier?: number;
 }
 function BannerElement({ banner, multiplier }: BannerElementProps) {
   if (!banner || !multiplier) {
@@ -390,7 +484,7 @@ function BannerElement({ banner, multiplier }: BannerElementProps) {
     colorMap[banner.bannerColor]
   );
   
-  const percentMultiplier = Math.round(Number(multiplier) * 100);
+  const percentMultiplier = Math.round(multiplier * 100);
   
   const getMultiplierFontWeight = () => {
     if (percentMultiplier <= 110) return "font-light";
@@ -409,7 +503,7 @@ function BannerElement({ banner, multiplier }: BannerElementProps) {
         alt="Banner type icon"
       />
       <span className="text-muted-foreground">{banner.name}</span>
-      <span className={cn(getMultiplierFontWeight(), "ml-auto", "mr-3", "my-2")}>
+      <span className={cn(getMultiplierFontWeight(), "ml-auto", "mr-3", "my-2", "text-muted-foreground")}>
         {percentMultiplier}%
       </span>
     </div>
@@ -419,13 +513,13 @@ function BannerElement({ banner, multiplier }: BannerElementProps) {
 interface TitleElementProps {
   name: string;
   description: string | null;
-  modifier: string;
+  modifier: number;
 }
 function TitleElement({ name, description, modifier }: TitleElementProps) {
-  const modifierFormatted = Math.round(Number(modifier) * 100);
+  const modifierFormatted = Math.round(modifier * 100);
 
   return (
-    <div className="flex flex-col w-50">
+    <div className="flex flex-col w-50 min-h-[68px]">
       <div className="text-sm">{name}</div>
       <div className="text-xs text-muted-foreground">
         <span className="font-semibold text-foreground">+{modifierFormatted}%</span>
@@ -439,11 +533,10 @@ function TitleElement({ name, description, modifier }: TitleElementProps) {
 interface PlayerSelectButtonProps {
   playerTeams: PlayerTeam[];
   roleFilter: number;
-  isLoading: boolean;
-  variant: "outline" | "link";
+  isDisabled: boolean;
   onSelectPlayer: (playerId: string) => void;
 }
-function PlayerSelectButton({ playerTeams, roleFilter, isLoading, variant, onSelectPlayer, children }: PropsWithChildren<PlayerSelectButtonProps>) {
+function PlayerSelectButton({ playerTeams, roleFilter, isDisabled, onSelectPlayer, children }: PropsWithChildren<PlayerSelectButtonProps>) {
   const [isPlayerPopoverOpen, setIsPlayerPopoverOpen] = useState(false)
  
   return (
@@ -451,10 +544,11 @@ function PlayerSelectButton({ playerTeams, roleFilter, isLoading, variant, onSel
       <Popover open={isPlayerPopoverOpen} onOpenChange={setIsPlayerPopoverOpen}>
         <PopoverTrigger asChild>
           <Button
-            variant={variant}
+            variant="outline"
             aria-expanded={isPlayerPopoverOpen}
             className="cursor-pointer"
-            disabled={isLoading}
+            disabled={isDisabled}
+            size="sm"
           >
             {children}
           </Button>

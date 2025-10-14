@@ -1,0 +1,1 @@
+ALTER TABLE "player_game_performances" RENAME COLUMN "heroId" TO "hero_id";

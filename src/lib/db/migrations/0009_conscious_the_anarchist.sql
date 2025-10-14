@@ -1,0 +1,1 @@
+ALTER TABLE "titles" RENAME COLUMN "titleType" TO "title_type";

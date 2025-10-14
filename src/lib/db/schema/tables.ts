@@ -121,11 +121,12 @@ export type Prediction = typeof predictionsTable.$inferSelect;
 // TODO screaming snake case?
 export const configNameEnum = pgEnum("config_name", [
   "isAcceptingPredictions",
+  "IS_ROSTER_OPEN"
 ]);
 export const configsTable = pgTable("configs", {
   id: uuid().primaryKey().defaultRandom(),
   name: configNameEnum().notNull(),
-  enabled: boolean(),
+  enabled: boolean().notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -169,40 +170,43 @@ export const fantasyPlayerTitleEnum = pgEnum("fantasy_title", [
 
 export const playerGamePerformancesTable = pgTable("player_game_performances", {
   id: uuid().primaryKey().defaultRandom(),
-  playerId: uuid("player_id").references(() => playersTable.id, { onDelete: "cascade" }),
-  gameId: uuid("game_id").references(() => gamesTable.id, { onDelete: "cascade" }),
-  kills: integer(),
-  deaths: integer(),
-  lastHits: integer("last_hits"),
-  gpm: integer(),
-  madstoneCount: integer("madstone_count"),
-  towerKills: integer("tower_kills"),
-  wardsPlaced: integer("wards_placed"),
-  campsStacked: integer("camps_stacked"),
-  runesGrabbed: integer("runes_grabbed"),
-  watchersTaken: integer("watchers_taken"),
-  // lotusesGrabbed: integer("lotuses_grabbed"),
-  roshanKills: integer("roshan_kills"),
-  teamfightParticipation: numeric("teamfight_participation"),
-  stunTime: numeric("stun_time"),
-  tormentorKills: integer("tormentor_kills"),
-  courierKills: integer("courier_kills"),
-  firstbloodClaimed: boolean("firstblood_claimed"),
-  smokesUsed: integer("smokes_used"),
+  playerId: uuid("player_id").references(() => playersTable.id, { onDelete: "cascade" }).notNull(),
+  gameId: uuid("game_id").references(() => gamesTable.id, { onDelete: "cascade" }).notNull(),
+  heroId: integer("hero_id"),
+  kills: integer().notNull(),
+  deaths: integer().notNull(),
+  lastHits: integer("last_hits").notNull(),
+  gpm: integer().notNull(),
+  madstoneCount: integer("madstone_count").notNull(),
+  towerKills: integer("tower_kills").notNull(),
+  wardsPlaced: integer("wards_placed").notNull(),
+  campsStacked: integer("camps_stacked").notNull(),
+  runesGrabbed: integer("runes_grabbed").notNull(),
+  watchersTaken: integer("watchers_taken").notNull(),
+  // lotusesGrabbed: integer("lotuses_grabbed").notNull(),
+  roshanKills: integer("roshan_kills").notNull(),
+  teamfightParticipation: numeric("teamfight_participation", { mode: "number"}).notNull(),
+  stunTime: numeric("stun_time", { mode: "number"}).notNull(),
+  tormentorKills: integer("tormentor_kills").notNull(),
+  courierKills: integer("courier_kills").notNull(),
+  firstbloodClaimed: boolean("firstblood_claimed").notNull(),
+  smokesUsed: integer("smokes_used").notNull(),
   titles: fantasyPlayerTitleEnum().array(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
+export type PlayerGamePerformance = typeof playerGamePerformancesTable.$inferSelect;
 export type InsertPlayerGamePerformance = typeof playerGamePerformancesTable.$inferInsert;
 
 export const titlesTable = pgTable("titles", {
   id: uuid().primaryKey().defaultRandom(),
-  title: fantasyPlayerTitleEnum().notNull(),
-  modifier: numeric().notNull(),
+  titleType: fantasyPlayerTitleEnum("title_type").notNull(),
+  modifier: numeric({ mode: "number" }).notNull(),
   name: text().notNull(),
   description: text(),
   isSecondary: boolean("is_secondary").default(false),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
+export type Title = typeof titlesTable.$inferSelect;
 export type FantasyPlayerTitleEnum = typeof fantasyPlayerTitleEnum.enumValues[number];
 
 export const userTitlesTable = pgTable("user_titles", {
@@ -245,6 +249,7 @@ export const bannerTypeEnum = pgEnum("banner_type_enum", [
   "COURIER_KILLS",
   "FIRSTBLOOD_CLAIMED"
 ]);
+export type BannerType = typeof bannerTypeEnum.enumValues[number];
 
 export const bannersTable = pgTable("banners", {
   id: uuid().primaryKey().defaultRandom(),
@@ -261,11 +266,11 @@ export const userBannersTable = pgTable("user_banners", {
   userId: text("user_id").references(() => usersTable.id, { onDelete: "cascade" }).notNull(),
   role: integer().notNull(),
   bannerTopId: uuid("banner_top_id").references(() => bannersTable.id, { onDelete: "cascade" }).notNull(),
-  bannerTopMultiplier: numeric("banner_top_multiplier").notNull(),
+  bannerTopMultiplier: numeric("banner_top_multiplier", { mode: "number"}).notNull(),
   bannerMiddleId: uuid("banner_middle_id").references(() => bannersTable.id, { onDelete: "cascade" }).notNull(),
-  bannerMiddleMultiplier: numeric("banner_middle_multiplier").notNull(),
+  bannerMiddleMultiplier: numeric("banner_middle_multiplier", { mode: "number"}).notNull(),
   bannerBottomId: uuid("banner_bottom_id").references(() => bannersTable.id, { onDelete: "cascade" }).notNull(),
-  bannerBottomMultiplier: numeric("banner_bottom_multiplier").notNull(),
+  bannerBottomMultiplier: numeric("banner_bottom_multiplier", { mode: "number"}).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   deletedAt: timestamp("deleted_at"),
 });
@@ -281,3 +286,16 @@ export const userRostersTable = pgTable("user_rosters", {
   hardSupportPlayerId: uuid("hard_support_player_id").references(() => playersTable.id, { onDelete: "cascade" }),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
+
+export const userRosterScoresTable = pgTable("user_roster_scores", {
+  id: uuid().primaryKey().defaultRandom(),
+  userId: text("user_id").references(() => usersTable.id, { onDelete: "cascade" }).notNull().unique(),
+  carryPlayerScore: numeric("carry_player_score", { mode: "number"}).default(0).notNull(),
+  midPlayerScore: numeric("mid_player_score", { mode: "number"}).default(0).notNull(),
+  offlanePlayerScore: numeric("offlane_player_score", { mode: "number"}).default(0).notNull(),
+  softSupportPlayerScore: numeric("soft_support_player_score", { mode: "number"}).default(0).notNull(),
+  hardSupportPlayerScore: numeric("hard_support_player_score", { mode: "number"}).default(0).notNull(),
+  totalScore: numeric("total_score", { mode: "number" }).default(0).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull()
+});
+export type UserRosterScore = typeof userRosterScoresTable.$inferSelect;

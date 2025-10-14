@@ -45,14 +45,14 @@ function RouteComponent() {
     // TODO a poor way to force rerender
     isFetching: isPredictionsFetching
   } = useQuery({
-    queryKey: ["predictions"],
+    queryKey: ["predictionsByUserId", profile.userId],
     queryFn: () => getPredictionsByUserId({ data: { userId: profile.userId } })
   });
 
   const isOwner = userSession?.user.id === profile.userId;
 
   return (
-    <div className="flex flex-col items-center">
+    <div className="flex flex-col items-center p-4">
       <Tabs defaultValue="prediction">
         <TabsList>
           <TabsTrigger value="prediction">Prediction</TabsTrigger>

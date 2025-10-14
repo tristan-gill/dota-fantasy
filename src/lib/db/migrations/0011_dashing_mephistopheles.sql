@@ -1,0 +1,1 @@
+ALTER TYPE "public"."config_name" ADD VALUE 'IS_ROSTER_LOCKED';

@@ -453,7 +453,7 @@ interface BracketTeamProps {
   isLoser?: boolean;
   team?: Team;
 }
-function BracketTeam({ isAnimateDisabled = true, predictionState = "NEITHER", isLoser, team }: BracketTeamProps) {
+export function BracketTeam({ isAnimateDisabled = true, predictionState = "NEITHER", isLoser, team }: BracketTeamProps) {
   const renderImageSection = () => {
     if (predictionState === "CORRECT") {
       return (

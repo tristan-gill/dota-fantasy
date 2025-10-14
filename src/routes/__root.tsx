@@ -2,19 +2,17 @@ import {
   HeadContent,
   Scripts,
   createRootRouteWithContext,
-} from '@tanstack/react-router'
-import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
-import { TanStackDevtools } from '@tanstack/react-devtools'
+} from '@tanstack/react-router';
+import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools';
+import { TanStackDevtools } from '@tanstack/react-devtools';
 
+import TanStackQueryDevtools from '../integrations/tanstack-query/devtools';
 
-
-import TanStackQueryDevtools from '../integrations/tanstack-query/devtools'
-
-import appCss from '../styles.css?url'
+import appCss from '../styles.css?url';
 
 import type { QueryClient } from '@tanstack/react-query';
 import { Header } from '@/components/Header';
-import { Toaster } from '@/components/ui/sonner'
+import { Toaster } from '@/components/ui/sonner';
 
 interface MyRouterContext {
   queryClient: QueryClient
@@ -31,7 +29,7 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
         content: 'width=device-width, initial-scale=1',
       },
       {
-        title: 'Legal Ads Fantasy',
+        title: 'Lads Fantasy',
       },
     ],
     links: [
@@ -53,23 +51,23 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       <head>
         <HeadContent />
       </head>
-      <body>
+      <body className="h-screen flex flex-col">
         <Header />
-        <div className="p-4">
-          {children}
-        </div>
-        <TanStackDevtools
-          config={{
-            position: 'bottom-right',
-          }}
-          plugins={[
-            {
-              name: 'Tanstack Router',
-              render: <TanStackRouterDevtoolsPanel />,
-            },
-            TanStackQueryDevtools,
-          ]}
-        />
+        {children}
+        {process.env.NODE_ENV !== "production" && (
+          <TanStackDevtools
+            config={{
+              position: 'bottom-right',
+            }}
+            plugins={[
+              {
+                name: 'Tanstack Router',
+                render: <TanStackRouterDevtoolsPanel />,
+              },
+              TanStackQueryDevtools,
+            ]}
+          />
+        )}
         <Toaster />
         <Scripts />
       </body>

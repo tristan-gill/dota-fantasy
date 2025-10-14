@@ -1,0 +1,1 @@
+ALTER TABLE "user_roster_scores" DROP COLUMN "updated_at";

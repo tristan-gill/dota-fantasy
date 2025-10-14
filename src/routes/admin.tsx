@@ -9,6 +9,7 @@ import { getPlayoffMatches, getTeams } from "@/services/bracket";
 import { processSeries } from '@/services/gameService';
 import { updatePlayoffMatch } from "@/services/playoffMatchService";
 import { getUserRole } from '@/services/profiles';
+import { syncUserRosterScores } from "@/services/rosterService";
 import { useMutation } from '@tanstack/react-query';
 import { createFileRoute, notFound, useRouter } from '@tanstack/react-router'
 import { Loader2, X } from 'lucide-react';
@@ -44,6 +45,7 @@ function RouteComponent() {
     <div className="flex flex-row gap-4">
       <AddSeriesCard playoffMatches={playoffMatches} />
       <UpdatePlayoffMatchCard playoffMatches={playoffMatches} teams={teams} />
+      <Button onClick={() => syncUserRosterScores()}>Sync scores</Button>
     </div>
   );
 }

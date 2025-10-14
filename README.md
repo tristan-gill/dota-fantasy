@@ -1,4 +1,5 @@
 # TODO
+- make a signin page for the home page to direct to, explain oath a bit
 - fantasy page
   - similar to TI fantasy but simplified slightly
   - select from any players you want for each(?) role

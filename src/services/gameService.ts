@@ -44,7 +44,10 @@ export const processSeries = createServerFn({ method: "POST" })
 
       const gamesResponse = await db
         .insert(gamesTable)
-        .values({ gameId, playoffMatchId })
+        .values({
+          gameId,
+          playoffMatchId: playoffMatchId || null
+        })
         .returning({ id: gamesTable.id });
       if (!gamesResponse || gamesResponse.length < 1) {
         throw new Error("Unexpected response when saving match.");
@@ -167,6 +170,7 @@ export const processSeries = createServerFn({ method: "POST" })
           .values({
             playerId: playerRecord.id,
             gameId: gameRecord.id,
+            heroId: player.hero_id,
             kills: player.kills,
             deaths: player.deaths,
             lastHits: player.last_hits,

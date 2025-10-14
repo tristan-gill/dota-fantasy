@@ -9,13 +9,20 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as LoginRouteImport } from './routes/login'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as RostersIndexRouteImport } from './routes/rosters.index'
 import { Route as PredictionsIndexRouteImport } from './routes/predictions.index'
-import { Route as RosterSlugRouteImport } from './routes/roster.$slug'
+import { Route as RostersSlugRouteImport } from './routes/rosters.$slug'
 import { Route as PredictionsSlugRouteImport } from './routes/predictions.$slug'
 import { Route as ApiAuthSplatRouteImport } from './routes/api.auth.$'
 
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminRoute = AdminRouteImport.update({
   id: '/admin',
   path: '/admin',
@@ -26,14 +33,19 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RostersIndexRoute = RostersIndexRouteImport.update({
+  id: '/rosters/',
+  path: '/rosters/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PredictionsIndexRoute = PredictionsIndexRouteImport.update({
   id: '/predictions/',
   path: '/predictions/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const RosterSlugRoute = RosterSlugRouteImport.update({
-  id: '/roster/$slug',
-  path: '/roster/$slug',
+const RostersSlugRoute = RostersSlugRouteImport.update({
+  id: '/rosters/$slug',
+  path: '/rosters/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PredictionsSlugRoute = PredictionsSlugRouteImport.update({
@@ -50,26 +62,32 @@ const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
+  '/login': typeof LoginRoute
   '/predictions/$slug': typeof PredictionsSlugRoute
-  '/roster/$slug': typeof RosterSlugRoute
+  '/rosters/$slug': typeof RostersSlugRoute
   '/predictions': typeof PredictionsIndexRoute
+  '/rosters': typeof RostersIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
+  '/login': typeof LoginRoute
   '/predictions/$slug': typeof PredictionsSlugRoute
-  '/roster/$slug': typeof RosterSlugRoute
+  '/rosters/$slug': typeof RostersSlugRoute
   '/predictions': typeof PredictionsIndexRoute
+  '/rosters': typeof RostersIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
+  '/login': typeof LoginRoute
   '/predictions/$slug': typeof PredictionsSlugRoute
-  '/roster/$slug': typeof RosterSlugRoute
+  '/rosters/$slug': typeof RostersSlugRoute
   '/predictions/': typeof PredictionsIndexRoute
+  '/rosters/': typeof RostersIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRouteTypes {
@@ -77,39 +95,54 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/admin'
+    | '/login'
     | '/predictions/$slug'
-    | '/roster/$slug'
+    | '/rosters/$slug'
     | '/predictions'
+    | '/rosters'
     | '/api/auth/$'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/admin'
+    | '/login'
     | '/predictions/$slug'
-    | '/roster/$slug'
+    | '/rosters/$slug'
     | '/predictions'
+    | '/rosters'
     | '/api/auth/$'
   id:
     | '__root__'
     | '/'
     | '/admin'
+    | '/login'
     | '/predictions/$slug'
-    | '/roster/$slug'
+    | '/rosters/$slug'
     | '/predictions/'
+    | '/rosters/'
     | '/api/auth/$'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRoute
+  LoginRoute: typeof LoginRoute
   PredictionsSlugRoute: typeof PredictionsSlugRoute
-  RosterSlugRoute: typeof RosterSlugRoute
+  RostersSlugRoute: typeof RostersSlugRoute
   PredictionsIndexRoute: typeof PredictionsIndexRoute
+  RostersIndexRoute: typeof RostersIndexRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin': {
       id: '/admin'
       path: '/admin'
@@ -124,6 +157,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/rosters/': {
+      id: '/rosters/'
+      path: '/rosters'
+      fullPath: '/rosters'
+      preLoaderRoute: typeof RostersIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/predictions/': {
       id: '/predictions/'
       path: '/predictions'
@@ -131,11 +171,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PredictionsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/roster/$slug': {
-      id: '/roster/$slug'
-      path: '/roster/$slug'
-      fullPath: '/roster/$slug'
-      preLoaderRoute: typeof RosterSlugRouteImport
+    '/rosters/$slug': {
+      id: '/rosters/$slug'
+      path: '/rosters/$slug'
+      fullPath: '/rosters/$slug'
+      preLoaderRoute: typeof RostersSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/predictions/$slug': {
@@ -158,9 +198,11 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRoute,
+  LoginRoute: LoginRoute,
   PredictionsSlugRoute: PredictionsSlugRoute,
-  RosterSlugRoute: RosterSlugRoute,
+  RostersSlugRoute: RostersSlugRoute,
   PredictionsIndexRoute: PredictionsIndexRoute,
+  RostersIndexRoute: RostersIndexRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
 }
 export const routeTree = rootRouteImport

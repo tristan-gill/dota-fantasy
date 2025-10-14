@@ -1,18 +1,11 @@
-import { getUserSession } from "@/services/auth";
-import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
-import { createAuthClient } from "better-auth/react"
+import { createAuthClient } from "better-auth/react";
 
 // TODO maybe need to add baseURL: import.meta.env.VITE_SERVER_URL
-export const authClient = createAuthClient({});
+export const authClient = createAuthClient({
+  baseURL: import.meta.env.VITE_SERVER_URL,
+});
 
 export const useAuthentication = () => {
-  // TODO what is suspenseQuery
-  // const { data: userSession } = useSuspenseQuery(queryOptions({
-  //   queryKey: ["user"],
-  //   queryFn: () => getUserSession(),
-  //   staleTime: 5000,
-  // }));
-
   const { data: userSession } = authClient.useSession();
 
   return { userSession, isAuthenticated: !!userSession };

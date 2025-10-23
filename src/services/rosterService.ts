@@ -1,10 +1,11 @@
 import { createServerFn } from "@tanstack/react-start";
-import { and, count, eq, inArray, isNotNull, isNull, sql } from "drizzle-orm";
+import { and, count, desc, eq, inArray, isNotNull, isNull, sql } from "drizzle-orm";
 import z from "zod";
 
 import { db } from "@/lib/db";
-import { Banner, bannersTable, BannerType, FantasyPlayerTitleEnum, gamesTable, PlayerGamePerformance, playerGamePerformancesTable, playersTable, teamsTable, Title, titlesTable, UserBanner, userBannersTable, userRolesTable, userRosterScoresTable, userRostersTable, UserTitle, userTitlesTable } from "@/lib/db/schema";
+import { Banner, bannersTable, BannerType, FantasyPlayerTitleEnum, gamesTable, PlayerGamePerformance, playerGamePerformancesTable, playersTable, profilesTable, teamsTable, Title, titlesTable, UserBanner, userBannersTable, userRolesTable, userRosterScoresTable, userRostersTable, UserTitle, userTitlesTable } from "@/lib/db/schema";
 import { userRequiredMiddleware } from "@/services/auth";
+import { alias } from "drizzle-orm/pg-core";
 
 const NUM_TITLE_ROLLS = process.env.NUM_TITLE_ROLLS ? Number(process.env.NUM_TITLE_ROLLS) : 10;
 const NUM_BANNER_ROLLS = process.env.NUM_BANNER_ROLLS ? Number(process.env.NUM_BANNER_ROLLS) : 10;
@@ -18,6 +19,35 @@ export const getUserRoster = createServerFn({ method: "GET" })
     const userRostersResponse = await db
       .select()
       .from(userRostersTable)
+      .where(eq(userRostersTable.userId, userId));
+    
+    if (!userRostersResponse || userRostersResponse.length < 1) {
+      return;
+    }
+    
+    return userRostersResponse[0];
+  });
+
+const GetUserRosterPlayersSchema = z.object({
+  userId: z.string().nonempty()
+});
+export const getUserRosterPlayers = createServerFn({ method: "GET" })
+  .inputValidator(GetUserRosterPlayersSchema)
+  .handler(async ({ data: { userId } }) => {
+    const carryPlayer = alias(playersTable, "carryPlayer");
+    const midPlayer = alias(playersTable, "midPlayer");
+    const offlanePlayer = alias(playersTable, "offlanePlayer");
+    const softSupportPlayer = alias(playersTable, "softSupportPlayer");
+    const hardSupportPlayer = alias(playersTable, "hardSupportPlayer");
+    
+    const userRostersResponse = await db
+      .select()
+      .from(userRostersTable)
+      .leftJoin(carryPlayer, eq(carryPlayer.id, userRostersTable.carryPlayerId))
+      .leftJoin(midPlayer, eq(midPlayer.id, userRostersTable.midPlayerId))
+      .leftJoin(offlanePlayer, eq(offlanePlayer.id, userRostersTable.offlanePlayerId))
+      .leftJoin(softSupportPlayer, eq(softSupportPlayer.id, userRostersTable.softSupportPlayerId))
+      .leftJoin(hardSupportPlayer, eq(hardSupportPlayer.id, userRostersTable.hardSupportPlayerId))
       .where(eq(userRostersTable.userId, userId));
     
     if (!userRostersResponse || userRostersResponse.length < 1) {
@@ -313,6 +343,7 @@ export const saveRosterPlayer = createServerFn({ method: "POST" })
         ...(role === 3 && { offlanePlayerId: data.offlanePlayerId }),
         ...(role === 4 && { softSupportPlayerId: data.softSupportPlayerId }),
         ...(role === 5 && { hardSupportPlayerId: data.hardSupportPlayerId }),
+        updatedAt: sql`NOW()`
       })
       .where(eq(userRostersTable.userId, userSession.user.id));
   });
@@ -435,6 +466,26 @@ export const insertBannerRoll = createServerFn({ method: "POST" })
       });
   });
 
+export const BASE_SCORE_MULTIPLIERS = {
+  "KILLS": 121,
+  "DEATHS": 180, // 1800 - 180 * deaths
+  "LAST_HITS": 3,
+  "GPM": 2,
+  "MADSTONE_COUNT": 19,
+  "TOWER_KILLS": 340,
+  "WARDS_PLACED": 113,
+  "CAMPS_STACKED": 170,
+  "RUNES_GRABBED": 121,
+  "WATCHERS_TAKEN": 121,
+  "SMOKES_USE": 283,
+  "ROSHAN_KILLS": 850,
+  "TEAMFIGHT_PARTICIPATION": 1895,
+  "STUN_TIME": 15,
+  "TORMENTOR_KILLS": 850,
+  "COURIER_KILLS": 850,
+  "FIRSTBLOOD_CLAIMED": 1700
+};
+
 interface CalculatePlayerFantasyScoreProps {
   playerGamePerformance: PlayerGamePerformance;
   titles: Title[];
@@ -483,32 +534,12 @@ const calculatePlayerFantasyScore = (props: CalculatePlayerFantasyScoreProps) =>
     "FIRSTBLOOD_CLAIMED": playerGamePerformance.firstbloodClaimed ? 1 : 0,
   };
 
-  const baseMultipliers = {
-    "KILLS": 121,
-    "DEATHS": 180, // 1800 - 180 * deaths
-    "LAST_HITS": 3,
-    "GPM": 2,
-    "MADSTONE_COUNT": 19,
-    "TOWER_KILLS": 340,
-    "WARDS_PLACED": 113,
-    "CAMPS_STACKED": 170,
-    "RUNES_GRABBED": 121,
-    "WATCHERS_TAKEN": 121,
-    "SMOKES_USE": 283,
-    "ROSHAN_KILLS": 850,
-    "TEAMFIGHT_PARTICIPATION": 1895,
-    "STUN_TIME": 15,
-    "TORMENTOR_KILLS": 850,
-    "COURIER_KILLS": 850,
-    "FIRSTBLOOD_CLAIMED": 1700
-  };
-
   let totalScore = 0;
-  for (const key of Object.keys(baseMultipliers)) {
+  for (const key of Object.keys(BASE_SCORE_MULTIPLIERS)) {
     const value = baseValues[key as BannerType];
-    let baseScore = value * baseMultipliers[key as BannerType];
+    let baseScore = value * BASE_SCORE_MULTIPLIERS[key as BannerType];
     if (key === "DEATHS") {
-      baseScore = 1800 - baseScore;
+      baseScore = Math.max(1800 - baseScore, 0);
     }
 
     if (key in bannerMultipliers) {
@@ -675,13 +706,10 @@ export const syncUserRosterScores = createServerFn({ method: "POST" })
 
         if (gameWithScore.playoffMatchId in bestMatchMap) {
           const bm = bestMatchMap[gameWithScore.playoffMatchId];
-          if (gameWithScore.score > bm[0]) {
-            bm[0] = gameWithScore.score;
-          } else if (gameWithScore.score > bm[1]) {
-            bm[1] = gameWithScore.score;
-          }
+          bm.push(gameWithScore.score);
+          bm.sort((a, b) => b - a);
         } else {
-          bestMatchMap[gameWithScore.playoffMatchId] = [gameWithScore.score, 0];
+          bestMatchMap[gameWithScore.playoffMatchId] = [gameWithScore.score];
         }
       }
 
@@ -726,7 +754,6 @@ export const syncUserRosterScores = createServerFn({ method: "POST" })
     }
   })
 
-
 const GetUserRosterScoreSchema = z.object({
   userId: z.string().nonempty()
 });
@@ -744,4 +771,42 @@ export const getUserRosterScore = createServerFn({ method: "GET" })
     }
 
     return userRosterScoreResponse[0];
+  });
+
+export const getRecentRosterCompletions = createServerFn({ method: "GET"})
+  .handler(async () => {
+    const predictionActivityResponse = await db
+      .select({
+        userId: userRostersTable.userId,
+        slug: profilesTable.slug,
+        name: profilesTable.name,
+        updatedAt: userRostersTable.updatedAt
+      })
+      .from(userRostersTable)
+      .innerJoin(profilesTable, eq(profilesTable.userId, userRostersTable.userId))
+      .where(
+        and(
+          isNotNull(userRostersTable.carryPlayerId),
+          isNotNull(userRostersTable.midPlayerId),
+          isNotNull(userRostersTable.offlanePlayerId),
+          isNotNull(userRostersTable.softSupportPlayerId),
+          isNotNull(userRostersTable.hardSupportPlayerId)
+        )
+      )
+      .orderBy(desc(userRostersTable.updatedAt))
+      .limit(25);
+    
+    return predictionActivityResponse;
+  });
+
+export const getUserRosterScoresLeaderboard = createServerFn({ method: "GET"})
+  .handler(async () => {
+    const userRosterScoresResponse = await db
+      .select()
+      .from(userRosterScoresTable)
+      .innerJoin(userRostersTable, eq(userRostersTable.userId, userRosterScoresTable.userId))
+      .innerJoin(profilesTable, eq(profilesTable.userId, userRosterScoresTable.userId))
+      .orderBy(desc(userRosterScoresTable.totalScore));
+    
+    return userRosterScoresResponse;
   });

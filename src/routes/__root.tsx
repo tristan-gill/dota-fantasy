@@ -43,15 +43,14 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
   shellComponent: RootDocument,
 })
 
-// TODO update styling so that the header is fixed top and the content takes the remaining space, 
-// also force scroll on the content portion for overflows
+// TODO force scroll on the content portion for overflows
 function RootDocument({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className='dark'>
       <head>
         <HeadContent />
       </head>
-      <body className="h-screen flex flex-col">
+      <body className="h-screen max-h-screen flex flex-col">
         <Header />
         {children}
         {process.env.NODE_ENV !== "production" && (

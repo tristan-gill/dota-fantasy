@@ -1,22 +1,21 @@
-import { Badge } from "@/components/ui/badge";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Command, CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator } from "@/components/ui/command";
+import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useAuthentication } from "@/lib/auth/client";
 import { Banner, UserBanner, UserTitle } from "@/lib/db/schema";
 import { cn } from "@/lib/utils";
-import { getConfig, getConfigs } from "@/services/configs";
+import { getConfig } from "@/services/configs";
 import { getProfileBySlug } from "@/services/profiles";
-import { getBanners, getPlayerTeams, getRosterRolls, getTitles, getUserBanners, getUserRoster, getUserRosterScore, getUserTitles, insertBannerRoll, insertTitleRoll, PlayerTeam, saveRosterPlayer } from "@/services/rosterService";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { createFileRoute, useRouter } from '@tanstack/react-router'
-import { Check, CheckIcon, ChevronsUpDownIcon, DicesIcon, InfoIcon, Loader2, ShuffleIcon } from "lucide-react";
+import { BASE_SCORE_MULTIPLIERS, getBanners, getPlayerTeams, getRosterRolls, getTitles, getUserBanners, getUserRoster, getUserRosterScore, getUserTitles, insertBannerRoll, insertTitleRoll, PlayerTeam, saveRosterPlayer } from "@/services/rosterService";
+import { useQuery } from "@tanstack/react-query";
+import { createFileRoute, redirect, useRouter } from '@tanstack/react-router'
+import { DicesIcon, InfoIcon, ShuffleIcon } from "lucide-react";
 import { PropsWithChildren, useMemo, useState } from "react";
+import { toast } from "sonner";
 
 interface RollData {
   titleRolls: number;
@@ -57,7 +56,11 @@ interface RosterData {
 export const Route = createFileRoute('/rosters/$slug')({
   component: RouteComponent,
   loader: async ({ params: { slug } }) => {
+    // TODO need to rewrite this whole route with alias queries rather than this psycho multi table join shit
     const profile = await getProfileBySlug({ data: { slug } });
+    if (!profile) {
+      throw redirect({ to: "/rosters" });
+    }
 
     const responses = await Promise.all([
       getUserRoster({ data: { userId: profile.userId }}),
@@ -144,24 +147,27 @@ function RouteComponent() {
     setIsSaving(false);
   };
 
+  // TODO add toast on save to indicate remaining
   const onRollTitle = async (role: number) => {
     setIsSaving(true);
     await insertTitleRoll({ data: { role }});
+    toast(`New titles rolled! You have ${rollData.titleRolls - rollData.titleRollsUsed - 1} remaining.`);
     await router.invalidate({ sync: true });
     setIsSaving(false);
   };
 
+  // TODO add toast on save to indicate remaining
   const onRollBanner = async (role: number) => {
     setIsSaving(true);
     await insertBannerRoll({ data: { role }});
+    toast(`New banners rolled! You have ${rollData.bannerRolls - rollData.bannerRollsUsed - 1} remaining.`);
     await router.invalidate({ sync: true });
     setIsSaving(false);
   };
 
   return (
-    <div className="flex flex-col">
-      
-      <div className="flex flex-row justify-between items-center mb-4">
+    <div className="flex flex-col p-4">
+      <div className="flex flex-row justify-center items-center mb-4 gap-8">
         <div>
           {!!userRosterScore && (
             <div>
@@ -182,11 +188,11 @@ function RouteComponent() {
             
             <Dialog>
               <DialogTrigger asChild>
-                <Button className="rounded-full cursor-pointer w-[18px]" variant="ghost" size="icon">
+                <Button className="rounded-full cursor-pointer w-[18px]" variant="link" size="icon">
                   <InfoIcon />
                 </Button>
               </DialogTrigger>
-              <DialogContent className="sm:max-w-[425px]">
+              <DialogContent className="max-w-[425px]">
                 <DialogHeader>
                   <DialogTitle>Fantasy roster</DialogTitle>
                   <DialogDescription>
@@ -194,7 +200,52 @@ function RouteComponent() {
                   </DialogDescription>
                 </DialogHeader>
                 <div className="grid gap-4">
-                  TODO
+                  <div className="text-sm text-muted-foreground">
+                    Once playoffs begin, your roster is locked and used for scoring. Individual players scores are calculated
+                    in each game they play. Banners amplify how much one stat contributes to the total score. 
+                    If the any of the conditions for their Titles are met, their total score will be multiplied.
+                    A players best score is calculated with their top 2 games within a series. The scoring for each stat is listed below:
+                  </div>
+                  <div className="flex flex-row gap-2">
+                    <div className="text-right text-sm">
+                      <div>Kills</div>
+                      <div>Deaths</div>
+                      <div>Creep score</div>
+                      <div>GPM</div>
+                      <div>Madstones collected</div>
+                      <div>Tower kills</div>
+                      <div>Wards placed</div>
+                      <div>Camps stacked</div>
+                      <div>Runes grabbed</div>
+                      <div>Watchers taken</div>
+                      <div>Roshan kills</div>
+                      <div>Teamfight participation</div>
+                      <div>Stuns</div>
+                      <div>Tormentor kills</div>
+                      <div>Courier kills</div>
+                      <div>First blood</div>
+                      <div>Smokes used</div>
+                    </div>
+                    <div className="text-muted-foreground text-sm">
+                      <div>+{BASE_SCORE_MULTIPLIERS.KILLS} per kill</div>
+                      <div>+1800 - {BASE_SCORE_MULTIPLIERS.DEATHS} per death</div>
+                      <div>+{BASE_SCORE_MULTIPLIERS.LAST_HITS} per last hit</div>
+                      <div>+{BASE_SCORE_MULTIPLIERS.GPM} times the player's GPM</div>
+                      <div>+{BASE_SCORE_MULTIPLIERS.MADSTONE_COUNT} per Madstone collected</div>
+                      <div>+{BASE_SCORE_MULTIPLIERS.TOWER_KILLS} per tower kill</div>
+                      <div>+{BASE_SCORE_MULTIPLIERS.WARDS_PLACED} per observer placed</div>
+                      <div>+{BASE_SCORE_MULTIPLIERS.CAMPS_STACKED} per camp stacked</div>
+                      <div>+{BASE_SCORE_MULTIPLIERS.RUNES_GRABBED} per rune bottled or taken</div>
+                      <div>+{BASE_SCORE_MULTIPLIERS.WATCHERS_TAKEN} per captured watcher</div>
+                      <div>+{BASE_SCORE_MULTIPLIERS.ROSHAN_KILLS} per Roshan kill</div>
+                      <div>+{BASE_SCORE_MULTIPLIERS.TEAMFIGHT_PARTICIPATION} max for teamfight participation</div>
+                      <div>+{BASE_SCORE_MULTIPLIERS.STUN_TIME} per second of stun time</div>
+                      <div>+{BASE_SCORE_MULTIPLIERS.TORMENTOR_KILLS} per Tormentor kill</div>
+                      <div>+{BASE_SCORE_MULTIPLIERS.COURIER_KILLS} per Courier kill</div>
+                      <div>+{BASE_SCORE_MULTIPLIERS.FIRSTBLOOD_CLAIMED} if the player gets first blood</div>
+                      <div>+{BASE_SCORE_MULTIPLIERS.SMOKES_USE} per smoke used</div>
+                    </div>
+                  </div>
                 </div>
                 <DialogFooter>
                   <DialogClose asChild>
@@ -434,25 +485,93 @@ function PlayerCard({
               <ShuffleIcon /> Player
             </PlayerSelectButton>
 
-            <Button
-              variant="outline"
-              className="cursor-pointer"
-              disabled={isLoading || rollData.titleRollsUsed >= rollData.titleRolls}
-              onClick={() => onRollTitle(role)}
-              size="sm"
-            >
-              <DicesIcon /> Titles
-            </Button>
+            {rollData.titleRollsUsed === 0 ? (
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className="cursor-pointer"
+                    disabled={isLoading || rollData.titleRollsUsed >= rollData.titleRolls}
+                    size="sm"
+                  >
+                    <DicesIcon /> Titles
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Title Rolls - {rollData.titleRolls} remaining</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      You can choose to Roll for a new set of Titles. This will replace
+                      both of the current Titles. The full list of Titles can be seen on the
+                      information in the top right. Would you like to continue?
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel className="cursor-pointer">
+                      Cancel
+                    </AlertDialogCancel>
+                    <AlertDialogAction className="cursor-pointer" onClick={() => onRollTitle(role)}>
+                      Continue
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            ) : (
+              <Button
+                variant="outline"
+                className="cursor-pointer"
+                disabled={isLoading || rollData.titleRollsUsed >= rollData.titleRolls}
+                onClick={() => onRollTitle(role)}
+                size="sm"
+              >
+                <DicesIcon /> Titles
+              </Button>
+            )}
 
-            <Button
-              variant="outline"
-              className="cursor-pointer"
-              disabled={isLoading || rollData.bannerRollsUsed >= rollData.bannerRolls}
-              onClick={() => onRollBanner(role)}
-              size="sm"
-            >
-              <DicesIcon /> Banners
-            </Button>
+            {rollData.bannerRollsUsed === 0 ? (
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className="cursor-pointer"
+                    disabled={isLoading || rollData.bannerRollsUsed >= rollData.bannerRolls}
+                    size="sm"
+                  >
+                    <DicesIcon /> Banners
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Banner Rolls - {rollData.bannerRolls} remaining</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      You can choose to Roll for a new set of Banners. This will replace
+                      all three of the current Banners as well as the rarity of the banner. 
+                      The rarity of the banner corresponds to the percentage modifier, ranging from
+                      110% to 250%. Would you like to continue?
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel className="cursor-pointer">
+                      Cancel
+                    </AlertDialogCancel>
+                    <AlertDialogAction className="cursor-pointer" onClick={() => onRollBanner(role)}>
+                      Continue
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            ) : (
+              <Button
+                variant="outline"
+                className="cursor-pointer"
+                disabled={isLoading || rollData.bannerRollsUsed >= rollData.bannerRolls}
+                onClick={() => onRollBanner(role)}
+                size="sm"
+              >
+                <DicesIcon /> Banners
+              </Button>
+            )}
+
           </div>
         )}
       </CardContent>

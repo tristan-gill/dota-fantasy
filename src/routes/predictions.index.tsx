@@ -3,40 +3,41 @@ import { ResultsBracket } from "@/components/ResultsBracket";
 import { SignedIn } from "@/components/SignedIn";
 import { SignedOut } from "@/components/SignedOut";
 import { Button } from "@/components/ui/button";
-import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
-import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useAuthentication } from "@/lib/auth/client";
-import { getUserSession } from '@/services/auth';
-import { getPlayoffMatches, getPredictionActivity, getPredictionsByUserId, getTeams } from '@/services/bracket';
+import { cn } from "@/lib/utils";
+import { getPlayoffMatches, getPredictionActivity, getTeams } from '@/services/bracket';
 import { getConfig } from "@/services/configs";
-import { getFinalsPredictionByUserId } from "@/services/predictionService";
+import { getFinalsPredictionByUserId, getLeaderboardPredictions } from "@/services/predictionService";
 import { getProfileByUserId } from '@/services/profiles';
 import { useQuery } from "@tanstack/react-query";
-import { createFileRoute, Link, redirect } from '@tanstack/react-router';
-import { formatDistance } from "date-fns";
-import { LogInIcon, Pencil } from "lucide-react";
+import { createFileRoute, Link } from '@tanstack/react-router';
+import { formatDistanceStrict } from "date-fns";
+import { LogInIcon } from "lucide-react";
 
 export const Route = createFileRoute('/predictions/')({
   component: RouteComponent,
   loader: async () => {
-    const recentPredictions = await getPredictionActivity();
+    const isPredictionsOpen = await getConfig({ data: { name: "isAcceptingPredictions" }});
     return {
-      recentPredictions
+      isPredictionsOpen: !!isPredictionsOpen
     }
   }
 })
 
 function RouteComponent() {
-  const { recentPredictions } = Route.useLoaderData();
-  const { userSession } = useAuthentication();
-
+  const { isPredictionsOpen } = Route.useLoaderData();
+  // TODO Maybe show like common expected winners?
   return (
-    <div className="p-4 h-full w-5xl grid grid-cols-3 grid-rows-3 gap-4 mx-auto overflow-hidden">
-      <div className="col-span-2">
-        <RecentPredictionsCard recentPredictions={recentPredictions} />
-      </div>
+    <div className="p-4 max-h-[775px] h-full my-auto w-7xl max-w-full grid grid-cols-3 grid-rows-3 gap-4 mx-auto overflow-hidden">
+      {isPredictionsOpen && (
+        <div className="col-span-2">
+          <RecentPredictionsCard />
+        </div>
+      )}
       <div>
         <SignedIn>
           <YourPredictionsCard />
@@ -45,54 +46,65 @@ function RouteComponent() {
           <LoginToPredictCard />
         </SignedOut>
       </div>
-      <div className="row-start-2 row-end-4 col-start-1 col-end-4">
+      <div className="row-start-2 row-end-4 col-start-1 col-end-2">
+        <PredictionsLeaderboardCard />
+      </div>
+      <div
+        className={cn(
+          isPredictionsOpen && "row-start-2 row-end-4 col-start-2 col-end-4",
+          !isPredictionsOpen && "row-start-1 row-end-4 col-start-2 col-end-4",
+        )}
+      >
         <ResultsCard />
       </div>
-      
-      {/* <div>
-        <Card>
-          Prompt to add your bracket
-        </Card>
-      </div>
-      <div>
-        <Card>
-          Maybe show like common expected winners?
-        </Card>
-      </div> */}
     </div>
   );
 }
 
-// TODO proper type from the table level
-interface RecentPrediction {
-  userId: string;
-  slug: string;
-  name: string | null;
-  teamName: string;
-  teamImage: string | null;
-  createdAt: Date;
-}
-// TODO change to top leaderboard when locked
-function RecentPredictionsCard({ recentPredictions }: { recentPredictions: RecentPrediction[] }) {
+function RecentPredictionsCard() {
   // TODO maybe add a list of possible phrasings, max limit team name, include team picture?
-  // TODO make the user and team name look clickable
+
+  const {
+    data: predictionActivity,
+    isLoading: isPredictionActivityLoading
+  } = useQuery({
+    queryKey: ["predictionActivity"],
+    queryFn: getPredictionActivity
+  });
+
+  if (isPredictionActivityLoading) {
+    return (
+      <Card className="h-full gap-4">
+        <CardHeader>
+          <CardTitle>Recent predictions</CardTitle>
+        </CardHeader>
+        <CardContent className="flex flex-col items-center justify-center h-full">
+          <Spinner className="size-10" />
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
-    <Card className="h-full">
+    <Card className="h-full gap-4">
       <CardHeader>
         <CardTitle>Recent predictions</CardTitle>
-        <CardDescription>
-          Recently completed predictions and who they think will come out on top in the grand finals.
-        </CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="overflow-auto">
         <Table>
           <TableBody>
-            {recentPredictions.map((recentPrediction) => {
-              return (
-                <TableRow key={recentPrediction.userId}>
-                  <TableCell>
-                    <span>
-                      <Link to="/predictions/$slug" params={{ slug: recentPrediction.slug }}>
+            {!predictionActivity || predictionActivity.length === 0 ? (
+              <TableRow>
+                <TableCell>
+                  No results.
+                </TableCell>
+              </TableRow>
+            ): (
+              predictionActivity.map((recentPrediction) => {
+                return (
+                  <TableRow key={recentPrediction.userId}>
+                    <TableCell>
+                      <Link className="font-semibold underline" to="/predictions/$slug" params={{ slug: recentPrediction.slug }}>
                         {recentPrediction.name}
                       </Link>
                       {" "}
@@ -102,16 +114,14 @@ function RecentPredictionsCard({ recentPredictions }: { recentPredictions: Recen
                         {recentPrediction.name}
                       </Link> */}
                       {recentPrediction.teamName}
-                      {" "}
-                      will win
-                    </span>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    {formatDistance(recentPrediction.createdAt, new Date(), { addSuffix: true, includeSeconds: false })}
-                  </TableCell>
-                </TableRow>
-              );
-            })}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      {formatDistanceStrict(recentPrediction.createdAt, new Date(), { addSuffix: true })}
+                    </TableCell>
+                  </TableRow>
+                );
+              })
+            )}
           </TableBody>
         </Table>
       </CardContent>
@@ -153,7 +163,7 @@ function YourPredictionsCard() {
           <CardTitle>Your predictions</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col justify-center items-center grow">
-          <Spinner className="size-12" />
+          <Spinner className="size-10" />
         </CardContent>
       </Card>
     );
@@ -181,24 +191,14 @@ function YourPredictionsCard() {
   }
 
   return (
-    <Card className="h-full">
+    <Card className="h-full gap-4">
       <CardHeader>
-        <CardTitle>Your predictions</CardTitle>
+        <CardTitle>Your prediction</CardTitle>
         <CardDescription>
-          Who you anticipate to win it all.
+          Who you expect to win the grand finals.
         </CardDescription>
-        <CardAction>
-          <Button disabled={!isPredictionsOpen} asChild variant="link" size="icon" className="h-4">
-            <Link to="/predictions/$slug" params={{ slug: profile?.slug || "" }}>
-              <Pencil className="size-4" />
-            </Link>
-          </Button>
-        </CardAction>
       </CardHeader>
-      <CardContent className="mt-auto">
-        <div className="flex justify-center text-sm mb-1 text-muted-foreground">
-          Grand finals
-        </div>
+      <CardContent className="mt-auto  overflow-auto">
         <Card className="py-1 h-[68px] rounded-sm">      
           <CardContent className="px-1">
             <BracketTeam team={finalsPrediction.leftTeam} isLoser={finalsPrediction.predictions.winnerId === finalsPrediction.rightTeam.id} isAnimateDisabled={true} />
@@ -207,6 +207,13 @@ function YourPredictionsCard() {
           </CardContent>
         </Card>
       </CardContent>
+      <CardFooter>
+        <Button asChild variant="outline" className="w-full">
+          <Link to="/predictions/$slug" params={{ slug: profile?.slug || "" }}>
+            {isPredictionsOpen ? "Edit" : "View"}
+          </Link>
+        </Button>
+      </CardFooter>
     </Card>
   );
 }
@@ -265,12 +272,82 @@ function ResultsCard() {
   }
 
   return (
-    <Card className="h-full">
+    <Card className="h-full gap-4 pb-0">
       <CardHeader>
         <CardTitle>Results</CardTitle>
       </CardHeader>
       <CardContent className="overflow-scroll">
         <ResultsBracket playoffMatches={playoffMatches} teams={teams} />
+      </CardContent>
+    </Card>
+  );
+}
+
+function PredictionsLeaderboardCard() {
+  const {
+    data: leaderboardPredictions,
+    isLoading: isLeaderboardPredictionsLoading
+  } = useQuery({
+    queryKey: ['leaderboardPredictions'],
+    queryFn: getLeaderboardPredictions,
+  });
+
+  if (isLeaderboardPredictionsLoading) {
+    return (
+      <Card className="h-full">
+        <CardHeader>
+          <CardTitle>Leaderboard</CardTitle>
+        </CardHeader>
+        <CardContent className="flex flex-col items-center justify-center h-full">
+          <Spinner className="size-10" />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <Card className="h-full gap-4">
+      <CardHeader>
+        <CardTitle>Leaderboard</CardTitle>
+        <CardDescription>
+          Users with the most correct predictions.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="overflow-auto">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Rank</TableHead>
+              <TableHead>User</TableHead>
+              <TableHead className="text-right">Score</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {!leaderboardPredictions || leaderboardPredictions.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={3} className="h-24 text-center text-muted-foreground">
+                  Waiting for playoffs to begin.
+                </TableCell>
+              </TableRow>
+            ): (
+              leaderboardPredictions.map((leaderboardPrediction, index) => {
+                return (
+                  <TableRow key={leaderboardPrediction.userId}>
+                    <TableCell>{index + 1}</TableCell>
+                    <TableCell className="max-w-[168px] overflow-hidden text-ellipsis">
+                      <Link className="font-semibold underline" to="/predictions/$slug" params={{ slug: leaderboardPrediction.slug || "" }}>
+                        {leaderboardPrediction.name}
+                      </Link>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      {leaderboardPrediction.count}
+                    </TableCell>
+                  </TableRow>
+                );
+              })
+            )}
+          </TableBody>
+        </Table>
       </CardContent>
     </Card>
   );

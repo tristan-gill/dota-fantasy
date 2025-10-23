@@ -83,13 +83,18 @@ export function AccountDropdown() {
           <DropdownMenuSeparator />
           
           <DropdownMenuItem asChild>
+            <Link to="/profile/$slug" params={{ slug: profile?.slug || ""}}>
+              Profile
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild>
             <Link to="/rosters/$slug" params={{ slug: profile?.slug || ""}}>
-              <UsersIcon /> Your roster
+              Roster
             </Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
             <Link to="/predictions/$slug" params={{ slug: profile?.slug || ""}}>
-              <TrendingUpDownIcon /> Your predictions
+              Predictions
             </Link>
           </DropdownMenuItem>
 

@@ -1,7 +1,7 @@
 import { db } from "@/lib/db";
-import { playoffMatchesTable, predictionsTable, teamsTable } from "@/lib/db/schema";
+import { playoffMatchesTable, predictionsTable, profilesTable, teamsTable } from "@/lib/db/schema";
 import { createServerFn } from "@tanstack/react-start";
-import { and, eq } from "drizzle-orm";
+import { and, count, eq } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import z from "zod";
 
@@ -28,4 +28,22 @@ export const getFinalsPredictionByUserId = createServerFn({ method: "GET" })
       );
 
     return predictionsResponse?.[0];
+  });
+
+export const getLeaderboardPredictions = createServerFn({ method: "GET" })
+  .handler(async () => {
+    const predictionsResponse = await db
+      .select({
+        userId: predictionsTable.userId,
+        count: count(predictionsTable.userId),
+        slug: profilesTable.slug,
+        name: profilesTable.name
+      })
+      .from(playoffMatchesTable)
+      .leftJoin(predictionsTable, eq(predictionsTable.playoffMatchId, playoffMatchesTable.id))
+      .leftJoin(profilesTable, eq(profilesTable.userId, predictionsTable.userId))
+      .where(eq(playoffMatchesTable.winnerId, predictionsTable.winnerId))
+      .groupBy(predictionsTable.userId, profilesTable.slug, profilesTable.name);
+
+    return predictionsResponse;
   });

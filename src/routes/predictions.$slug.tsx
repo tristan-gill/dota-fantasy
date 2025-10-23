@@ -1,6 +1,6 @@
 import { ResultsBracket } from '@/components/ResultsBracket';
 import { Card } from '@/components/ui/card';
-import { createFileRoute, ErrorComponent } from '@tanstack/react-router'
+import { createFileRoute, ErrorComponent, redirect } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query';
 import { getProfileBySlug } from '@/services/profiles';
 import { getPlayoffMatches, getPredictionsByUserId, getTeams } from '@/services/bracket';
@@ -14,6 +14,10 @@ export const Route = createFileRoute('/predictions/$slug')({
   component: RouteComponent,
   loader: async ({ params }) => {
     const profile = await getProfileBySlug({ data: { slug: params.slug } });
+    if (!profile) {
+      throw redirect({ to: "/predictions" });
+    }
+
     const configs = await getConfigs();
     const isAcceptingPredictions = configs?.find((c) => c.name === "isAcceptingPredictions")?.enabled;
     // const responses = await Promise.all([
@@ -43,6 +47,7 @@ function RouteComponent() {
   const {
     data: predictions,
     // TODO a poor way to force rerender
+    // TODO doesnt work on prod it seems
     isFetching: isPredictionsFetching
   } = useQuery({
     queryKey: ["predictionsByUserId", profile.userId],

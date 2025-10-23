@@ -15,6 +15,12 @@ export const Route = createFileRoute('/login')({
 });
 
 function RouteComponent() {
+  const onLogin = () => {
+    authClient.signIn.social({
+      provider: "discord",
+    });
+  };
+
   return (
     <div className="flex flex-col justify-center items-center h-100">
       <div className="flex flex-col items-center gap-4">
@@ -22,7 +28,7 @@ function RouteComponent() {
         <p className="max-w-sm text-muted-foreground">
           Log in to get your predictions and roster started.
         </p>
-        <Button variant="outline" onClick={() => authClient.signIn.social({ provider: "discord" })}>
+        <Button variant="outline" onClick={onLogin}>
           <DiscordIcon />
           Login with Discord
         </Button>

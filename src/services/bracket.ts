@@ -1,6 +1,6 @@
 
 import { createServerFn } from "@tanstack/react-start";
-import { eq } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 import { z } from "zod";
 
 import { db } from "@/lib/db";
@@ -100,7 +100,6 @@ export const savePredictions = createServerFn({ method: "POST" })
       .values(predictions);
   });
 
-// TODO validate this works
 export const getPredictionActivity = createServerFn({ method: "GET"})
   .handler(async () => {
     const predictionActivityResponse = await db
@@ -117,6 +116,7 @@ export const getPredictionActivity = createServerFn({ method: "GET"})
       .innerJoin(profilesTable, eq(predictionsTable.userId, profilesTable.userId))
       .innerJoin(teamsTable, eq(teamsTable.id, predictionsTable.winnerId))
       .where(eq(playoffMatchesTable.round, 8)) // GRAND_FINALS_ROUND
+      .orderBy(desc(predictionsTable.createdAt))
       .limit(25);
     return predictionActivityResponse;
   });

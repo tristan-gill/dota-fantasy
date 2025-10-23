@@ -1,26 +1,10 @@
 import { Link } from "@tanstack/react-router";
 import { AccountDropdown } from "@/components/AccountDropdown";
 import { Button } from "./ui/button";
-import { SignedIn } from "./SignedIn";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "./ui/dropdown-menu";
-import { useQuery } from "@tanstack/react-query";
-import { getProfileByUserId } from "@/services/profiles";
-import { useAuthentication } from "@/lib/auth/client";
-import { TrendingUpDownIcon, UsersIcon } from "lucide-react";
 
 export function Header() {
-  const { userSession } = useAuthentication();
-  
-  const {
-    data: profile
-  } = useQuery({
-    queryKey: ["profileByUserId", userSession?.user.id],
-    queryFn: () => getProfileByUserId({ data: { userId: userSession?.user.id || "" }}),
-    enabled: !!userSession?.user.id
-  });
-
   return (
-    <header className="border-b px-4 py-3">
+    <header className="border-b px-4 py-3 sticky top-0 bg-background">
       <div className="container mx-auto flex items-center justify-between">
         <Link to="/" className="flex items-center gap-2">
           <img
@@ -32,18 +16,6 @@ export function Header() {
         </Link>
 
         <div className="flex items-center gap-2">
-          <SignedIn>
-            <Button variant="ghost" size="sm">
-              <Link to="/rosters/$slug" params={{ slug: profile?.slug || ""}}>
-                Draft
-              </Link>
-            </Button>
-            <Button variant="ghost" size="sm">
-              <Link to="/predictions/$slug" params={{ slug: profile?.slug || ""}}>
-                Predict
-              </Link>
-            </Button>
-          </SignedIn>
           <Button variant="ghost" size="sm">
             <Link to="/predictions">
               Predictions

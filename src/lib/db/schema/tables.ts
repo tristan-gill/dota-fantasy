@@ -72,7 +72,7 @@ export const profilesTable = pgTable("profiles", {
 }, (table) => [
   index("slug_idx").on(table.slug)
 ]);
-// export type Profile = typeof profiles.$inferSelect;
+export type Profile = typeof profilesTable.$inferSelect;
 
 export const teamsTable = pgTable("teams", {
   id: uuid().primaryKey().defaultRandom(),
@@ -91,7 +91,7 @@ export const playersTable = pgTable("players", {
   image: text(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
-// export type Player = typeof players.$inferSelect;
+export type Player = typeof playersTable.$inferSelect;
 
 export const playoffMatchesTable = pgTable("playoff_matches", {
   id: uuid().primaryKey().defaultRandom(),
@@ -285,6 +285,7 @@ export const userRostersTable = pgTable("user_rosters", {
   softSupportPlayerId: uuid("soft_support_player_id").references(() => playersTable.id, { onDelete: "cascade" }),
   hardSupportPlayerId: uuid("hard_support_player_id").references(() => playersTable.id, { onDelete: "cascade" }),
   createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
 export const userRosterScoresTable = pgTable("user_roster_scores", {

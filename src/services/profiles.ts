@@ -28,7 +28,7 @@ export const getProfileBySlug = createServerFn({ method: "GET" })
       .limit(1);
     
     if (!response || response.length < 1) {
-      throw new Error('Profile not found.');
+      return;
     }
 
     return response[0];

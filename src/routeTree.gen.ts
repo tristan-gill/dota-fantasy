@@ -15,6 +15,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as RostersIndexRouteImport } from './routes/rosters.index'
 import { Route as PredictionsIndexRouteImport } from './routes/predictions.index'
 import { Route as RostersSlugRouteImport } from './routes/rosters.$slug'
+import { Route as ProfileSlugRouteImport } from './routes/profile.$slug'
 import { Route as PredictionsSlugRouteImport } from './routes/predictions.$slug'
 import { Route as ApiAuthSplatRouteImport } from './routes/api.auth.$'
 
@@ -48,6 +49,11 @@ const RostersSlugRoute = RostersSlugRouteImport.update({
   path: '/rosters/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ProfileSlugRoute = ProfileSlugRouteImport.update({
+  id: '/profile/$slug',
+  path: '/profile/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PredictionsSlugRoute = PredictionsSlugRouteImport.update({
   id: '/predictions/$slug',
   path: '/predictions/$slug',
@@ -64,6 +70,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRoute
   '/login': typeof LoginRoute
   '/predictions/$slug': typeof PredictionsSlugRoute
+  '/profile/$slug': typeof ProfileSlugRoute
   '/rosters/$slug': typeof RostersSlugRoute
   '/predictions': typeof PredictionsIndexRoute
   '/rosters': typeof RostersIndexRoute
@@ -74,6 +81,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminRoute
   '/login': typeof LoginRoute
   '/predictions/$slug': typeof PredictionsSlugRoute
+  '/profile/$slug': typeof ProfileSlugRoute
   '/rosters/$slug': typeof RostersSlugRoute
   '/predictions': typeof PredictionsIndexRoute
   '/rosters': typeof RostersIndexRoute
@@ -85,6 +93,7 @@ export interface FileRoutesById {
   '/admin': typeof AdminRoute
   '/login': typeof LoginRoute
   '/predictions/$slug': typeof PredictionsSlugRoute
+  '/profile/$slug': typeof ProfileSlugRoute
   '/rosters/$slug': typeof RostersSlugRoute
   '/predictions/': typeof PredictionsIndexRoute
   '/rosters/': typeof RostersIndexRoute
@@ -97,6 +106,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/login'
     | '/predictions/$slug'
+    | '/profile/$slug'
     | '/rosters/$slug'
     | '/predictions'
     | '/rosters'
@@ -107,6 +117,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/login'
     | '/predictions/$slug'
+    | '/profile/$slug'
     | '/rosters/$slug'
     | '/predictions'
     | '/rosters'
@@ -117,6 +128,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/login'
     | '/predictions/$slug'
+    | '/profile/$slug'
     | '/rosters/$slug'
     | '/predictions/'
     | '/rosters/'
@@ -128,6 +140,7 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRoute
   LoginRoute: typeof LoginRoute
   PredictionsSlugRoute: typeof PredictionsSlugRoute
+  ProfileSlugRoute: typeof ProfileSlugRoute
   RostersSlugRoute: typeof RostersSlugRoute
   PredictionsIndexRoute: typeof PredictionsIndexRoute
   RostersIndexRoute: typeof RostersIndexRoute
@@ -178,6 +191,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RostersSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/profile/$slug': {
+      id: '/profile/$slug'
+      path: '/profile/$slug'
+      fullPath: '/profile/$slug'
+      preLoaderRoute: typeof ProfileSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/predictions/$slug': {
       id: '/predictions/$slug'
       path: '/predictions/$slug'
@@ -200,6 +220,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRoute: AdminRoute,
   LoginRoute: LoginRoute,
   PredictionsSlugRoute: PredictionsSlugRoute,
+  ProfileSlugRoute: ProfileSlugRoute,
   RostersSlugRoute: RostersSlugRoute,
   PredictionsIndexRoute: PredictionsIndexRoute,
   RostersIndexRoute: RostersIndexRoute,

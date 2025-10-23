@@ -1,13 +1,10 @@
 # TODO
-- make a signin page for the home page to direct to, explain oath a bit
-- fantasy page
-  - similar to TI fantasy but simplified slightly
-  - select from any players you want for each(?) role
-  - roll for new titles/subtitles (one roll changes both)
-  - roll for new banners + banner tiers (one roll changes the banners and their tiers)
-
-  - could maybe toggle on for group stage as testing?
-- fantasy home page
+- profiles page with the your roster and your predictions cards as CTA's
+- explain oath a bit on login page
+- rework the roster and prediction slug pages into one profile page?
+- roster page
+  - ability to view other peoples rosters
+- roster home page
   - current top users, links to their fantasy roster
   - current top players and their base fantasy scores
 - predictions home

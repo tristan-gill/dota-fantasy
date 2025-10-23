@@ -339,7 +339,7 @@ function TopPlayersCard() {
       <CardHeader>
         <CardTitle>Top players</CardTitle>
         <CardDescription>
-          Highest base scores from whole season.
+          Players with the highest base scores.
         </CardDescription>
       </CardHeader>
       <CardContent className="overflow-auto h-full">

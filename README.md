@@ -1,14 +1,8 @@
 # TODO
+- link previews for discord with rich content
 - profiles page with the your roster and your predictions cards as CTA's
-- explain oath a bit on login page
-- rework the roster and prediction slug pages into one profile page?
-- roster page
-  - ability to view other peoples rosters
-- roster home page
-  - current top users, links to their fantasy roster
-  - current top players and their base fantasy scores
-- predictions home
-  - current top predictors
+- add some kind of profile sidebar to indicate whos roster/predictions youre looking at
+- players page
 - team page
   - can we connect the dbtable teams to the stats teams?
   - show team logo and name

@@ -82,7 +82,7 @@ function PredictionItem({ profile }: ProfileProps) {
       <ItemActions>
         <Button variant="outline" size="sm" asChild>
           <Link to="/predictions/$slug" params={{ slug: profile.slug }}>
-            Open
+            View
           </Link>
         </Button>
       </ItemActions>
@@ -102,7 +102,7 @@ function RosterItem({ profile }: ProfileProps) {
       <ItemActions>
         <Button variant="outline" size="sm" asChild>
           <Link to="/rosters/$slug" params={{ slug: profile.slug }}>
-            Open
+            View
           </Link>
         </Button>
       </ItemActions>

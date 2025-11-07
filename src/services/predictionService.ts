@@ -43,7 +43,8 @@ export const getLeaderboardPredictions = createServerFn({ method: "GET" })
       .leftJoin(predictionsTable, eq(predictionsTable.playoffMatchId, playoffMatchesTable.id))
       .leftJoin(profilesTable, eq(profilesTable.userId, predictionsTable.userId))
       .where(eq(playoffMatchesTable.winnerId, predictionsTable.winnerId))
-      .groupBy(predictionsTable.userId, profilesTable.slug, profilesTable.name);
+      .groupBy(predictionsTable.userId, profilesTable.slug, profilesTable.name)
+      .limit(25);
 
     return predictionsResponse;
   });

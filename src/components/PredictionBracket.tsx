@@ -485,7 +485,7 @@ export function BracketTeam({ isAnimateDisabled = true, predictionState = "NEITH
   }
   
   return (
-    <div className={cn("flex", "flex-row", "items-center", "gap-1", isLoser && "opacity-50")}>
+    <div className={cn("flex", "flex-row", "items-center", "gap-1", isLoser && "opacity-40")}>
       {renderImageSection()}
       
       {!!team?.name ? (

@@ -1,7 +1,7 @@
 import { db } from "@/lib/db";
-import { playerGamePerformancesTable, playersTable } from "@/lib/db/schema";
+import { gamesTable, playerGamePerformancesTable, playersTable } from "@/lib/db/schema";
 import { createServerFn } from "@tanstack/react-start";
-import { eq, sql } from "drizzle-orm";
+import { eq, sql, isNotNull } from "drizzle-orm";
 import { BASE_SCORE_MULTIPLIERS } from "@/services/rosterService";
 
 export const getTopPlayersLeaderboard = createServerFn({ method: "GET"})
@@ -33,8 +33,11 @@ export const getTopPlayersLeaderboard = createServerFn({ method: "GET"})
       })
       .from(playersTable)
       .innerJoin(playerGamePerformancesTable, eq(playerGamePerformancesTable.playerId, playersTable.id))
+      .innerJoin(gamesTable, eq(gamesTable.id, playerGamePerformancesTable.gameId))
+      .where(isNotNull(gamesTable.playoffMatchId))
       .groupBy(playersTable.name, playersTable.position, playersTable.image)
-      .orderBy(sql`totalScore DESC`);
+      .orderBy(sql`totalScore DESC`)
+      .limit(10);
 
     return userRosterScoresResponse;
   });

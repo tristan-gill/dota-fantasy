@@ -1,6 +1,7 @@
 import { createMiddleware, createServerFn, json } from "@tanstack/react-start";
 import { authClient } from "@/lib/auth/client";
 import { getRequestHeaders } from "@tanstack/react-start/server";
+import { redirect } from "@tanstack/react-router";
 
 export const getUserSession = createServerFn({ method: "GET" }).handler(
   async () => {
@@ -27,10 +28,7 @@ export const userRequiredMiddleware = createMiddleware({ type: "function" })
   .middleware([userMiddleware])
   .server(async ({ next, context }) => {
     if (!context.userSession || !context.userSession.data || !context.userSession.data.user) {
-      throw json(
-        { message: "You must be logged in to do that!" },
-        { status: 401 },
-      );
+      throw redirect({ to: "/" });
     }
 
     return next({ context: { userSession: context.userSession.data } });

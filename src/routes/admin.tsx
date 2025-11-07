@@ -11,7 +11,7 @@ import { updatePlayoffMatch } from "@/services/playoffMatchService";
 import { getUserRole } from '@/services/profiles';
 import { syncUserRosterScores } from "@/services/rosterService";
 import { useMutation } from '@tanstack/react-query';
-import { createFileRoute, notFound, useRouter } from '@tanstack/react-router'
+import { createFileRoute, notFound, redirect, useRouter } from '@tanstack/react-router'
 import { Loader2, X } from 'lucide-react';
 import { useMemo, useState } from "react";
 import { toast } from 'sonner';
@@ -22,7 +22,7 @@ export const Route = createFileRoute('/admin')({
     // TODO test if this works
     const userRole = await getUserRole();
     if (!userRole || userRole.role !== "ADMIN") {
-      throw notFound();
+      throw redirect({ to: "/" });
     }
 
     // TODO maybe join this on the db side?

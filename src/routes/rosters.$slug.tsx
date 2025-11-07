@@ -5,6 +5,7 @@ import { CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, C
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useAuthentication } from "@/lib/auth/client";
 import { Banner, UserBanner, UserTitle } from "@/lib/db/schema";
 import { cn } from "@/lib/utils";
@@ -107,6 +108,7 @@ export const Route = createFileRoute('/rosters/$slug')({
     };
 
     return {
+      profile,
       rosterData,
       playerTeams,
       rollData,
@@ -118,7 +120,7 @@ export const Route = createFileRoute('/rosters/$slug')({
 
 function RouteComponent() {
   const router = useRouter();
-  const { rosterData, playerTeams, rollData, userRosterScore } = Route.useLoaderData();
+  const { profile, rosterData, playerTeams, rollData, userRosterScore } = Route.useLoaderData();
   const { userSession } = useAuthentication();
   const [isSaving, setIsSaving] = useState(false);
 
@@ -147,7 +149,6 @@ function RouteComponent() {
     setIsSaving(false);
   };
 
-  // TODO add toast on save to indicate remaining
   const onRollTitle = async (role: number) => {
     setIsSaving(true);
     await insertTitleRoll({ data: { role }});
@@ -156,7 +157,6 @@ function RouteComponent() {
     setIsSaving(false);
   };
 
-  // TODO add toast on save to indicate remaining
   const onRollBanner = async (role: number) => {
     setIsSaving(true);
     await insertBannerRoll({ data: { role }});
@@ -167,6 +167,18 @@ function RouteComponent() {
 
   return (
     <div className="flex flex-col p-4">
+      <div className="flex flex-row gap-2 justify-center">
+        {profile.image ? (
+          <img
+            src={profile.image}
+            className="rounded-sm size-6"
+            alt="Team logo"
+          />
+        ) : (
+          <Skeleton className="rounded-sm size-6 shrink-0 animate-none" />
+        )}
+        <div>{profile.name}<span className="text-muted-foreground">'s roster</span></div>
+      </div>
       <div className="flex flex-row justify-center items-center mb-4 gap-8">
         <div>
           {!!userRosterScore && (
@@ -400,7 +412,7 @@ function PlayerCard({
 
   if (!player) {
     return (
-      <Card className="w-[338px]">
+      <Card className="w-[338px] gap-4">
         <CardHeader>
           <CardTitle>Select a player</CardTitle>
           <CardDescription>Position {role}</CardDescription>
@@ -420,7 +432,7 @@ function PlayerCard({
   }
 
   return (
-    <Card className="w-[338px]">
+    <Card className="w-[338px] gap-4">
       <CardHeader>
         <CardTitle>{player?.playerName}</CardTitle>
         <CardDescription className="max-w-sm whitespace-nowrap overflow-hidden text-ellipsis">
@@ -597,7 +609,7 @@ function BannerElement({ banner, multiplier }: BannerElementProps) {
     "flex",
     "flex-row",
     "items-center",
-    "gap-4",
+    "gap-3",
     "bg-linear-to-r",
     "rounded-md",
     colorMap[banner.bannerColor]
@@ -618,11 +630,11 @@ function BannerElement({ banner, multiplier }: BannerElementProps) {
     <div className={containerClassName}>
       <img
         src={`/banners/${banner.bannerType}.png`}
-        className="rounded-sm size-10 opacity-50"
+        className="rounded-sm size-8 opacity-50"
         alt="Banner type icon"
       />
       <span className="text-muted-foreground">{banner.name}</span>
-      <span className={cn(getMultiplierFontWeight(), "ml-auto", "mr-3", "my-2", "text-muted-foreground")}>
+      <span className={cn(getMultiplierFontWeight(), "ml-auto", "mr-3", "my-1", "text-muted-foreground")}>
         {percentMultiplier}%
       </span>
     </div>

@@ -62,7 +62,7 @@ export const getUserRole = createServerFn({ method: "GET" })
       .where(eq(userRolesTable.userId, userSession.user.id));
     
     if (!userRoleResponse || userRoleResponse.length < 1) {
-      return undefined;
+      return;
     }
 
     return userRoleResponse[0];

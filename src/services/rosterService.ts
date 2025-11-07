@@ -3,7 +3,7 @@ import { and, count, desc, eq, inArray, isNotNull, isNull, sql } from "drizzle-o
 import z from "zod";
 
 import { db } from "@/lib/db";
-import { Banner, bannersTable, BannerType, FantasyPlayerTitleEnum, gamesTable, PlayerGamePerformance, playerGamePerformancesTable, playersTable, profilesTable, teamsTable, Title, titlesTable, UserBanner, userBannersTable, userRolesTable, userRosterScoresTable, userRostersTable, UserTitle, userTitlesTable } from "@/lib/db/schema";
+import { Banner, bannersTable, BannerType, configsTable, FantasyPlayerTitleEnum, gamesTable, PlayerGamePerformance, playerGamePerformancesTable, playersTable, profilesTable, teamsTable, Title, titlesTable, UserBanner, userBannersTable, userRolesTable, userRosterScoresTable, userRostersTable, UserTitle, userTitlesTable } from "@/lib/db/schema";
 import { userRequiredMiddleware } from "@/services/auth";
 import { alias } from "drizzle-orm/pg-core";
 
@@ -287,6 +287,21 @@ export const saveRosterPlayer = createServerFn({ method: "POST" })
   .inputValidator(SaveRosterPlayerSchema)
   .middleware([userRequiredMiddleware])
   .handler(async ({ data, context: { userSession } }) => {
+    const configsResponse = await db
+      .select()
+      .from(configsTable)
+      .where(eq(configsTable.name, "IS_ROSTER_OPEN"))
+      .limit(1);
+    
+    if (!configsResponse || configsResponse.length < 1) {
+      throw new Error("Unable to find configs");
+    }
+
+    if (!configsResponse[0].enabled) {
+      // TODO how does this look on the client side
+      throw new Error("Rosters are closed!");
+    }
+    
     const userRostersResponse = await db
       .select()
       .from(userRostersTable)
@@ -396,6 +411,20 @@ export const insertTitleRoll = createServerFn({ method: "POST" })
   .inputValidator(InsertTitleRollSchema)
   .middleware([userRequiredMiddleware])
   .handler(async ({ data: { role }, context: { userSession } }) => {
+    const configsResponse = await db
+      .select()
+      .from(configsTable)
+      .where(eq(configsTable.name, "IS_ROSTER_OPEN"))
+      .limit(1);
+    
+    if (!configsResponse || configsResponse.length < 1) {
+      throw new Error("Unable to find configs");
+    }
+
+    if (!configsResponse[0].enabled) {
+      throw new Error("Rosters are closed!");
+    }
+    
     const rollData = await getRosterRolls();
 
     if (rollData.titleRollsUsed >= rollData.titleRolls) {
@@ -432,6 +461,20 @@ export const insertBannerRoll = createServerFn({ method: "POST" })
   .inputValidator(InsertBannerRollSchema)
   .middleware([userRequiredMiddleware])
   .handler(async ({ data: { role }, context: { userSession } }) => {
+    const configsResponse = await db
+      .select()
+      .from(configsTable)
+      .where(eq(configsTable.name, "IS_ROSTER_OPEN"))
+      .limit(1);
+    
+    if (!configsResponse || configsResponse.length < 1) {
+      throw new Error("Unable to find configs");
+    }
+
+    if (!configsResponse[0].enabled) {
+      throw new Error("Rosters are closed!");
+    }
+    
     const rollData = await getRosterRolls();
 
     if (rollData.bannerRollsUsed >= rollData.bannerRolls) {
@@ -664,10 +707,16 @@ export const syncUserRosterScores = createServerFn({ method: "POST" })
       .select()
       .from(playerGamePerformancesTable)
       .innerJoin(gamesTable, eq(gamesTable.id, playerGamePerformancesTable.gameId))
-      .where(inArray(playerGamePerformancesTable.playerId, Array.from(playerIdsSet)))
+      .where(
+        and(
+          isNotNull(gamesTable.playoffMatchId),
+          inArray(playerGamePerformancesTable.playerId, Array.from(playerIdsSet))
+        )
+      );
 
     if (!gamePlayerGamePerformances || gamePlayerGamePerformances.length < 1) {
-      throw new Error("No game performances found during sync");
+      console.log("No game performances found during sync");
+      return;
     }
 
     // TODO surely some way to improve this craziness

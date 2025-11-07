@@ -9,6 +9,7 @@ import { PredictionBracket } from '@/components/PredictionBracket';
 import { Loader2 } from 'lucide-react';
 import { useAuthentication } from '@/lib/auth/client';
 import { getConfigs } from '@/services/configs';
+import { Skeleton } from "@/components/ui/skeleton";
 
 export const Route = createFileRoute('/predictions/$slug')({
   component: RouteComponent,
@@ -58,8 +59,20 @@ function RouteComponent() {
 
   return (
     <div className="flex flex-col items-center p-4">
+      <div className="flex flex-row gap-2 absolute">
+        {profile.image ? (
+          <img
+            src={profile.image}
+            className="rounded-sm size-6"
+            alt="Team logo"
+          />
+        ) : (
+          <Skeleton className="rounded-sm size-6 shrink-0 animate-none" />
+        )}
+        <div>{profile.name}<span className="text-muted-foreground">'s predictions</span></div>
+      </div>
       <Tabs defaultValue="prediction">
-        <TabsList>
+        <TabsList className="ml-auto">
           <TabsTrigger value="prediction">Prediction</TabsTrigger>
           <TabsTrigger value="results">Results</TabsTrigger>
         </TabsList>

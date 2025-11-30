@@ -153,8 +153,17 @@ function YourRosterCard() {
       <Card className="h-full">
         <CardHeader>
           <CardTitle>Your roster</CardTitle>
-          <CardDescription>No roster found.</CardDescription>
+          <CardDescription>Craft the perfect team to earn the most points!.</CardDescription>
         </CardHeader>
+        {isRosterOpen && (
+          <CardFooter className="mt-auto">
+            <Button asChild variant="outline" className="w-full">
+              <Link to="/rosters/$slug" params={{ slug: profile?.slug || "" }}>
+                Create roster
+              </Link>
+            </Button>
+          </CardFooter>
+        )}
       </Card>
     );
   }

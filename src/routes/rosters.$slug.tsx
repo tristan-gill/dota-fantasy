@@ -68,7 +68,7 @@ export const Route = createFileRoute('/rosters/$slug')({
       getUserTitles({ data: { userId: profile.userId }}),
       getUserBanners({ data: { userId: profile.userId }}),
       getPlayerTeams(),
-      getRosterRolls(),
+      getRosterRolls({ data: { userId: profile.userId }}),
       getUserRosterScore({ data: { userId: profile.userId }})
     ]);
 

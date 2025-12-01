@@ -363,22 +363,24 @@ export const saveRosterPlayer = createServerFn({ method: "POST" })
       .where(eq(userRostersTable.userId, userSession.user.id));
   });
 
-
+const GetRosterRollsSchema = z.object({
+  userId: z.string().nonempty()
+});
 export const getRosterRolls = createServerFn({ method: "GET" })
-  .middleware([userRequiredMiddleware])
-  .handler(async ({ context: { userSession }}) => {
+  .inputValidator(GetRosterRollsSchema)
+  .handler(async ({ data: { userId }}) => {
     const deletedUserTitlesResponse = await db
       .select({ count: count(userTitlesTable.id)})
       .from(userTitlesTable)
       .where(
         and(
-          eq(userTitlesTable.userId, userSession.user.id),
+          eq(userTitlesTable.userId, userId),
           isNotNull(userTitlesTable.deletedAt)
         )
       );
     
     if (!deletedUserTitlesResponse || deletedUserTitlesResponse.length < 1) {
-      throw new Error(`Unable to load title data for ${userSession.user.id}`);
+      throw new Error(`Unable to load title data for ${userId}`);
     }
 
     const deletedUserBannersResponse = await db
@@ -386,13 +388,13 @@ export const getRosterRolls = createServerFn({ method: "GET" })
       .from(userBannersTable)
       .where(
         and(
-          eq(userBannersTable.userId, userSession.user.id),
+          eq(userBannersTable.userId, userId),
           isNotNull(userBannersTable.deletedAt)
         )
       );
     
     if (!deletedUserBannersResponse || deletedUserBannersResponse.length < 1) {
-      throw new Error(`Unable to load banner data for ${userSession.user.id}`);
+      throw new Error(`Unable to load banner data for ${userId}`);
     }
 
     return {
@@ -425,7 +427,7 @@ export const insertTitleRoll = createServerFn({ method: "POST" })
       throw new Error("Rosters are closed!");
     }
     
-    const rollData = await getRosterRolls();
+    const rollData = await getRosterRolls({ data: { userId: userSession.user.id }});
 
     if (rollData.titleRollsUsed >= rollData.titleRolls) {
       throw new Error(`Max rolls already used for ${userSession.user.id}`)
@@ -475,7 +477,7 @@ export const insertBannerRoll = createServerFn({ method: "POST" })
       throw new Error("Rosters are closed!");
     }
     
-    const rollData = await getRosterRolls();
+    const rollData = await getRosterRolls({ data: { userId: userSession.user.id }});
 
     if (rollData.bannerRollsUsed >= rollData.bannerRolls) {
       throw new Error(`Max rolls already used for ${userSession.user.id}`)

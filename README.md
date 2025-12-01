@@ -1,20 +1,3 @@
-# TODO
-- link previews for discord with rich content
-- profiles page with the your roster and your predictions cards as CTA's
-- add some kind of profile sidebar to indicate whos roster/predictions youre looking at
-- players page
-- team page
-  - can we connect the dbtable teams to the stats teams?
-  - show team logo and name
-  - show whos on the team
-  - show results
-- player page
-  - player name and logo
-  - what team they are on
-  - base fantasy points
-  - recent results
-
-
 # Getting Started
 
 To run this application:

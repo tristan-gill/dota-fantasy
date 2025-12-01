@@ -274,7 +274,12 @@ function BracketMatch({ round, sequence, isUpper, playoffMatches, predictions, t
       previousSequence = (sequence * 2) - 1;
       isPreviousUpper = true;
       isPreviousWinner = true;
-    } else if ([3, 5, 7].includes(round)) {
+    } else if (round === 5) {
+      previousRound = round - 1;
+      previousSequence = sequence === 1 ? 2 : 1;
+      isPreviousUpper = true;
+      isPreviousWinner = false;
+    } else if ([3, 7].includes(round)) {
       // lower bracket game - left is the loser from upper bracket
       previousRound = round - 1;
       previousSequence = sequence;

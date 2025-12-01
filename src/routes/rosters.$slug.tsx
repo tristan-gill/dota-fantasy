@@ -281,7 +281,7 @@ function RouteComponent() {
             role={1}
             rollData={rollData}
             isLoading={isSaving}
-            isRosterLocked={!isRosterOpen}
+            isRosterLocked={!isRollDataShowing}
             onSelectPlayer={(playerId: string) => onSelectPlayer(playerId, 1)}
             onRollTitle={onRollTitle}
             onRollBanner={onRollBanner}
@@ -295,7 +295,7 @@ function RouteComponent() {
             role={2}
             rollData={rollData}
             isLoading={isSaving}
-            isRosterLocked={!isRosterOpen}
+            isRosterLocked={!isRollDataShowing}
             onSelectPlayer={(playerId: string) => onSelectPlayer(playerId, 2)}
             onRollTitle={onRollTitle}
             onRollBanner={onRollBanner}
@@ -309,7 +309,7 @@ function RouteComponent() {
             role={3}
             rollData={rollData}
             isLoading={isSaving}
-            isRosterLocked={!isRosterOpen}
+            isRosterLocked={!isRollDataShowing}
             onSelectPlayer={(playerId: string) => onSelectPlayer(playerId, 3)}
             onRollTitle={onRollTitle}
             onRollBanner={onRollBanner}
@@ -326,7 +326,7 @@ function RouteComponent() {
             role={4}
             rollData={rollData}
             isLoading={isSaving}
-            isRosterLocked={!isRosterOpen}
+            isRosterLocked={!isRollDataShowing}
             onSelectPlayer={(playerId: string) => onSelectPlayer(playerId, 4)}
             onRollTitle={onRollTitle}
             onRollBanner={onRollBanner}
@@ -340,7 +340,7 @@ function RouteComponent() {
             role={5}
             rollData={rollData}
             isLoading={isSaving}
-            isRosterLocked={!isRosterOpen}
+            isRosterLocked={!isRollDataShowing}
             onSelectPlayer={(playerId: string) => onSelectPlayer(playerId, 5)}
             onRollTitle={onRollTitle}
             onRollBanner={onRollBanner}

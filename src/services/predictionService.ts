@@ -1,7 +1,7 @@
 import { db } from "@/lib/db";
 import { playoffMatchesTable, predictionsTable, profilesTable, teamsTable } from "@/lib/db/schema";
 import { createServerFn } from "@tanstack/react-start";
-import { and, count, eq } from "drizzle-orm";
+import { and, count, eq, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import z from "zod";
 
@@ -44,6 +44,7 @@ export const getLeaderboardPredictions = createServerFn({ method: "GET" })
       .leftJoin(profilesTable, eq(profilesTable.userId, predictionsTable.userId))
       .where(eq(playoffMatchesTable.winnerId, predictionsTable.winnerId))
       .groupBy(predictionsTable.userId, profilesTable.slug, profilesTable.name)
+      .orderBy(sql`count DESC`)
       .limit(25);
 
     return predictionsResponse;

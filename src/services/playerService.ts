@@ -36,8 +36,7 @@ export const getTopPlayersLeaderboard = createServerFn({ method: "GET"})
       .innerJoin(gamesTable, eq(gamesTable.id, playerGamePerformancesTable.gameId))
       .where(isNotNull(gamesTable.playoffMatchId))
       .groupBy(playersTable.name, playersTable.position, playersTable.image)
-      .orderBy(sql`totalScore DESC`)
-      .limit(10);
+      .orderBy(sql`totalScore DESC`);
 
     return userRosterScoresResponse;
   });
